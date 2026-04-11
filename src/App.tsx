@@ -110,8 +110,8 @@ function App() {
           <div className="title-row">
             <span style={{ fontSize: '1.75rem' }}>⛳</span>
             <div>
-              <h1>Parkids</h1>
-              <p className="subtext">Select or add a golfer to start scoring.</p>
+              <h1>Parkids 🏌️‍♂️</h1>
+              <p className="subtext">Select or add a golfer to start scoring. 🌳</p>
             </div>
           </div>
         </header>
@@ -125,7 +125,7 @@ function App() {
                 className="button"
                 onClick={() => setCurrentUser(user)}
               >
-                {user}
+                👤 {user}
               </button>
             ))}
           </div>
@@ -139,7 +139,7 @@ function App() {
               style={{ padding: '10px', marginRight: '10px', borderRadius: '8px', border: '1px solid #dbeafe' }}
             />
             <button className="button secondary" onClick={addUser}>
-              Add Golfer
+              ➕ Add Golfer
             </button>
           </div>
         </section>
@@ -154,7 +154,7 @@ function App() {
           <span style={{ fontSize: '1.75rem' }}>⛳</span>
           <div>
             <h1>Parkids</h1>
-            <p className="subtext">Playing as {currentUser}. <button className="button secondary" style={{ fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => setCurrentUser('')}>Switch Golfer</button></p>
+            <p className="subtext">Playing as {currentUser}. <button className="button secondary" style={{ fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => setCurrentUser('')}>🔄 Switch Golfer</button></p>
           </div>
         </div>
 
@@ -172,7 +172,7 @@ function App() {
           </div>
 
           <div style={{ marginTop: '18px' }}>
-            <label style={{ display: 'block', marginBottom: '8px' }}>Select Course:</label>
+            <label style={{ display: 'block', marginBottom: '8px' }}>🏌️ Select Course:</label>
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
@@ -185,70 +185,79 @@ function App() {
           </div>
 
           <div style={{ marginTop: '18px' }}>
-            <strong>Current total:</strong> {totalScore}
+            <strong>🎯 Current total:</strong> {totalScore}
           </div>
         </div>
       </header>
 
       <section className="panel">
-        <h2>Score your round</h2>
+        <h2>🎮 Score your round</h2>
         <p className="subtext">Tap + or - to update each hole quickly while you play.</p>
 
         <div className="hole-grid">
-          {scores.map((score, index) => (
-            <div key={index} className="hole-card">
-              <h3>Hole {index + 1}</h3>
-              <div className="score-display">{score}</div>
-              <div className="adjust-row">
-                <button onClick={() => updateScore(index, -1)} aria-label={`Reduce score for hole ${index + 1}`}>
-                  −
-                </button>
-                <button onClick={() => updateScore(index, 1)} aria-label={`Increase score for hole ${index + 1}`}>
-                  +
-                </button>
+          {scores.map((score, index) => {
+            const getEmoji = (s: number) => {
+              if (s === 1) return '🏆';
+              if (s === 2) return '🥈';
+              if (s === 3) return '🥉';
+              if (s <= 5) return '🎯';
+              return '⛳';
+            };
+            return (
+              <div key={index} className="hole-card">
+                <h3>Hole {index + 1} {getEmoji(score)}</h3>
+                <div className="score-display">{score}</div>
+                <div className="adjust-row">
+                  <button onClick={() => updateScore(index, -1)} aria-label={`Reduce score for hole ${index + 1}`}>
+                    ➖
+                  </button>
+                  <button onClick={() => updateScore(index, 1)} aria-label={`Increase score for hole ${index + 1}`}>
+                    ➕
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="round-actions" style={{ marginTop: '20px' }}>
           <button className="button" onClick={saveRound}>
-            Save round
+            💾 Save round
           </button>
           <button className="button secondary" onClick={resetRound}>
-            Reset scores
+            🔄 Reset scores
           </button>
         </div>
       </section>
 
       <section className="panel">
-        <h2>Progress dashboard</h2>
+        <h2>📈 Progress dashboard</h2>
         <div className="summary-list">
           <div className="summary-item">
-            <strong>Best score</strong>
+            <strong>🏆 Best score</strong>
             {bestScore === null ? 'Play a round to see your best score.' : `${bestScore}`}
           </div>
           <div className="summary-item">
-            <strong>Average score</strong>
+            <strong>📊 Average score</strong>
             {averageScore === null ? 'Save a few rounds to track progress.' : `${averageScore}`}
           </div>
           <div className="summary-item">
-            <strong>Total rounds saved</strong>
+            <strong>🎮 Total rounds saved</strong>
             {history.length}
           </div>
         </div>
       </section>
 
       <section className="panel">
-        <h2>Saved rounds</h2>
+        <h2>📚 Saved rounds</h2>
         {history.length === 0 ? (
-          <p className="subtext">No rounds saved yet. Tap “Save round” after you finish a game.</p>
+          <p className="subtext">No rounds saved yet. Tap "Save round" after you finish a game. 🎉</p>
         ) : (
           <div className="summary-list">
             {history.map((round) => (
               <div key={round.id} className="history-item">
-                <strong>{round.date} at {round.course}</strong>
-                <div>{round.holes} holes • Total score {round.total}</div>
+                <strong>📅 {round.date} at {round.course}</strong>
+                <div>{round.holes} holes • Total score {round.total} 🏌️</div>
               </div>
             ))}
           </div>
@@ -256,7 +265,7 @@ function App() {
       </section>
 
       <footer>
-        Keep playing, practicing, and having fun. 🏌️‍♀️
+        Keep playing, practicing, and having fun. 🏌️‍♀️ ⛳ 🌳
       </footer>
     </div>
   );

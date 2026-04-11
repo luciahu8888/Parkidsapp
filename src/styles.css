@@ -1,7 +1,7 @@
 :root {
   color-scheme: light;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: radial-gradient(circle at top, #f6f8ff, #c7e9ff 45%, #b9f0e1 100%);
+  background: linear-gradient(135deg, #228B22 0%, #32CD32 50%, #90EE90 100%);
   color: #1f2937;
 }
 
@@ -23,10 +23,10 @@ body {
 }
 
 .app-shell {
-  background: rgba(255, 255, 255, 0.92);
-  border: 2px solid #dbeafe;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(144, 238, 144, 0.9));
+  border: 3px solid #228B22;
   border-radius: 28px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 16px 40px rgba(34, 139, 34, 0.3);
   padding: 28px;
 }
 
@@ -55,8 +55,8 @@ body {
 .panel {
   padding: 18px;
   border-radius: 22px;
-  background: #f8fbff;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f0f8ff, #e6f7ff);
+  border: 2px solid #228B22;
   margin-bottom: 20px;
 }
 
@@ -77,22 +77,22 @@ body {
 }
 
 .button {
-  background: linear-gradient(135deg, #7dd3fc, #38bdf8);
-  color: #0f172a;
+  background: linear-gradient(135deg, #228B22, #32CD32);
+  color: #ffffff;
 }
 
 .button.secondary {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: linear-gradient(135deg, #DEB887, #F4A460);
+  color: #2d3748;
 }
 
 .toggle-button {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: linear-gradient(135deg, #F0E68C, #FFFACD);
+  color: #2F4F2F;
 }
 
 .toggle-button.active {
-  background: #bfdbfe;
+  background: linear-gradient(135deg, #DAA520, #FFD700);
 }
 
 .hole-grid {
@@ -102,8 +102,8 @@ body {
 }
 
 .hole-card {
-  background: white;
-  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #FFFACD, #F0E68C);
+  border: 2px solid #DAA520;
   border-radius: 18px;
   padding: 16px;
   text-align: center;
@@ -130,8 +130,8 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background: linear-gradient(135deg, #F5F5DC, #FFF8DC);
+  border: 2px solid #DAA520;
   font-size: 1.35rem;
 }
 
@@ -142,7 +142,7 @@ body {
 
 .summary-item,
 .history-item {
-  background: #eef2ff;
+  background: linear-gradient(135deg, #E6F3FF, #B0E0E6);
   border-radius: 18px;
   padding: 14px;
 }
@@ -154,8 +154,8 @@ body {
 }
 
 .history-item {
-  background: #ffffff;
-  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #ffffff, #F5F5DC);
+  border: 2px solid #228B22;
 }
 
 footer {
