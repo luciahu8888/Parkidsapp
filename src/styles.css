@@ -107,6 +107,9 @@ body {
   border-radius: 18px;
   padding: 16px;
   text-align: center;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
 .hole-card h3 {
@@ -120,10 +123,51 @@ body {
   color: #475569;
 }
 
+.shot-breakdown {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.shot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.shot-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shot-controls button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.shot-controls span {
+  min-width: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
 .score-display {
   margin: 14px 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 800;
+  color: #1f2937;
 }
 
 .adjust-row {

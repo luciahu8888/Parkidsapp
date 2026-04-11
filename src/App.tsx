@@ -12,6 +12,19 @@ type Course = {
   holes: HoleData[];
 };
 
+type ShotBreakdown = {
+  driver: number;
+  fairway: number;
+  iron: number;
+  pitching: number;
+  putting: number;
+};
+
+type HoleScore = {
+  total: number;
+  breakdown: ShotBreakdown;
+};
+
 type RoundRecord = {
   id: string;
   date: string;
@@ -20,10 +33,24 @@ type RoundRecord = {
   course: string;
   tee: string;
   par: number;
+  scores: HoleScore[]; // 改为详细的每洞得分
 };
 
 const defaultHoleCount = 9;
-const createEmptyScores = (count: number) => Array.from({ length: count }, () => 3);
+
+const createEmptyHoleScore = (): HoleScore => ({
+  total: 0,
+  breakdown: {
+    driver: 0,
+    fairway: 0,
+    iron: 0,
+    pitching: 0,
+    putting: 0,
+  },
+});
+
+const createEmptyScores = (count: number): HoleScore[] => 
+  Array.from({ length: count }, () => createEmptyHoleScore());
 
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
@@ -128,7 +155,7 @@ const courses: Course[] = [
   const [selectedCourse, setSelectedCourse] = useState<Course>(courses[0]);
   const [selectedTee, setSelectedTee] = useState<'blue' | 'white' | 'red'>('white');
   const [holeCount, setHoleCount] = useState(defaultHoleCount);
-  const [scores, setScores] = useState<number[]>(createEmptyScores(defaultHoleCount));
+  const [scores, setScores] = useState<HoleScore[]>(createEmptyScores(defaultHoleCount));
   const [history, setHistory] = useState<RoundRecord[]>([]);
 
   useEffect(() => {
@@ -156,7 +183,7 @@ const courses: Course[] = [
     setScores(createEmptyScores(holeCount));
   }, [holeCount]);
 
-  const totalScore = useMemo(() => scores.reduce((sum, value) => sum + value, 0), [scores]);
+  const totalScore = useMemo(() => scores.reduce((sum, score) => sum + score.total, 0), [scores]);
   const bestScore = useMemo(() => {
     if (history.length === 0) return null;
     return Math.min(...history.map((round) => round.total));
@@ -166,9 +193,22 @@ const courses: Course[] = [
     return Math.round(history.reduce((sum, round) => sum + round.total, 0) / history.length);
   }, [history]);
 
-  const updateScore = (index: number, delta: number) => {
+  const updateShot = (holeIndex: number, shotType: keyof ShotBreakdown, delta: number) => {
     setScores((current) =>
-      current.map((score, i) => (i === index ? Math.max(1, score + delta) : score))
+      current.map((score, i) => {
+        if (i === holeIndex) {
+          const newBreakdown = {
+            ...score.breakdown,
+            [shotType]: Math.max(0, score.breakdown[shotType] + delta),
+          };
+          const newTotal = Object.values(newBreakdown).reduce((sum, val) => sum + val, 0);
+          return {
+            total: newTotal,
+            breakdown: newBreakdown,
+          };
+        }
+        return score;
+      })
     );
   };
 
@@ -185,6 +225,7 @@ const courses: Course[] = [
       course: selectedCourse.name,
       tee: selectedTee,
       par: totalPar,
+      scores: scores.slice(0, holeCount), // 保存详细的每洞得分
     };
     setHistory((existing) => [record, ...existing].slice(0, 12));
   };
@@ -323,19 +364,59 @@ const courses: Course[] = [
             };
             return (
               <div key={index} className="hole-card">
-                <h3>Hole {index + 1} {getEmoji(score)}</h3>
+                <h3>Hole {index + 1} {getEmoji(score.total)}</h3>
                 <div className="hole-info">
                   <small>Par {par} • {distance}yd</small>
                 </div>
-                <div className="score-display">{score}</div>
-                <div className="adjust-row">
-                  <button onClick={() => updateScore(index, -1)} aria-label={`Reduce score for hole ${index + 1}`}>
-                    ➖
-                  </button>
-                  <button onClick={() => updateScore(index, 1)} aria-label={`Increase score for hole ${index + 1}`}>
-                    ➕
-                  </button>
+                
+                <div className="shot-breakdown">
+                  <div className="shot-row">
+                    <span>🏌️‍♂️ Driver:</span>
+                    <div className="shot-controls">
+                      <button onClick={() => updateShot(index, 'driver', -1)}>-</button>
+                      <span>{score.breakdown.driver}</span>
+                      <button onClick={() => updateShot(index, 'driver', 1)}>+</button>
+                    </div>
+                  </div>
+                  
+                  <div className="shot-row">
+                    <span>🌳 Fairway:</span>
+                    <div className="shot-controls">
+                      <button onClick={() => updateShot(index, 'fairway', -1)}>-</button>
+                      <span>{score.breakdown.fairway}</span>
+                      <button onClick={() => updateShot(index, 'fairway', 1)}>+</button>
+                    </div>
+                  </div>
+                  
+                  <div className="shot-row">
+                    <span>🔨 Iron:</span>
+                    <div className="shot-controls">
+                      <button onClick={() => updateShot(index, 'iron', -1)}>-</button>
+                      <span>{score.breakdown.iron}</span>
+                      <button onClick={() => updateShot(index, 'iron', 1)}>+</button>
+                    </div>
+                  </div>
+                  
+                  <div className="shot-row">
+                    <span>🎯 Pitching:</span>
+                    <div className="shot-controls">
+                      <button onClick={() => updateShot(index, 'pitching', -1)}>-</button>
+                      <span>{score.breakdown.pitching}</span>
+                      <button onClick={() => updateShot(index, 'pitching', 1)}>+</button>
+                    </div>
+                  </div>
+                  
+                  <div className="shot-row">
+                    <span>⛳ Putting:</span>
+                    <div className="shot-controls">
+                      <button onClick={() => updateShot(index, 'putting', -1)}>-</button>
+                      <span>{score.breakdown.putting}</span>
+                      <button onClick={() => updateShot(index, 'putting', 1)}>+</button>
+                    </div>
+                  </div>
                 </div>
+                
+                <div className="score-display">Total: {score.total}</div>
               </div>
             );
           })}
@@ -375,12 +456,29 @@ const courses: Course[] = [
           <p className="subtext">No rounds saved yet. Tap "Save round" after you finish a game. 🎉</p>
         ) : (
           <div className="summary-list">
-            {history.map((round) => (
-              <div key={round.id} className="history-item">
-                <strong>📅 {round.date} at {round.course} ({round.tee} tee)</strong>
-                <div>{round.holes} holes • Score {round.total} (Par {round.par}) • {round.total - round.par > 0 ? '+' : ''}{round.total - round.par} 🏌️</div>
-              </div>
-            ))}
+            {history.map((round) => {
+              // 计算击球统计
+              const totalShots = round.scores?.reduce((acc, hole) => {
+                return {
+                  driver: acc.driver + hole.breakdown.driver,
+                  fairway: acc.fairway + hole.breakdown.fairway,
+                  iron: acc.iron + hole.breakdown.iron,
+                  pitching: acc.pitching + hole.breakdown.pitching,
+                  putting: acc.putting + hole.breakdown.putting,
+                };
+              }, { driver: 0, fairway: 0, iron: 0, pitching: 0, putting: 0 }) || 
+              { driver: 0, fairway: 0, iron: 0, pitching: 0, putting: 0 };
+              
+              return (
+                <div key={round.id} className="history-item">
+                  <strong>📅 {round.date} at {round.course} ({round.tee} tee)</strong>
+                  <div>{round.holes} holes • Score {round.total} (Par {round.par}) • {round.total - round.par > 0 ? '+' : ''}{round.total - round.par} 🏌️</div>
+                  <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#64748b' }}>
+                    🏌️‍♂️{totalShots.driver} 🌳{totalShots.fairway} 🔨{totalShots.iron} 🎯{totalShots.pitching} ⛳{totalShots.putting}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
