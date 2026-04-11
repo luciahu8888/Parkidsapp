@@ -1,0 +1,171 @@
+:root {
+  color-scheme: light;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: radial-gradient(circle at top, #f6f8ff, #c7e9ff 45%, #b9f0e1 100%);
+  color: #1f2937;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px;
+}
+
+#root {
+  width: min(980px, 100%);
+}
+
+.app-shell {
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid #dbeafe;
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  padding: 28px;
+}
+
+.app-header {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.title-row h1 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+}
+
+.subtext {
+  color: #475569;
+  line-height: 1.5;
+}
+
+.panel {
+  padding: 18px;
+  border-radius: 22px;
+  background: #f8fbff;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 20px;
+}
+
+.buttons-row,
+.round-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button,
+.toggle-button {
+  border: none;
+  cursor: pointer;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 700;
+}
+
+.button {
+  background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+  color: #0f172a;
+}
+
+.button.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.toggle-button {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.toggle-button.active {
+  background: #bfdbfe;
+}
+
+.hole-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.hole-card {
+  background: white;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  padding: 16px;
+  text-align: center;
+}
+
+.hole-card h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.score-display {
+  margin: 14px 0;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.adjust-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.adjust-row button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  font-size: 1.35rem;
+}
+
+.summary-list {
+  display: grid;
+  gap: 12px;
+}
+
+.summary-item,
+.history-item {
+  background: #eef2ff;
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.summary-item strong,
+.history-item strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.history-item {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+}
+
+footer {
+  margin-top: 10px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 16px;
+  }
+}
