@@ -60,6 +60,70 @@ function formatDate(date: Date) {
   });
 }
 
+// Performance icons mapping (you can replace with downloaded icons from icons8)
+const performanceIcons: Record<string, string> = {
+  'Eagle': '/icons/eagle.png',
+  'Birdie': '/icons/birdie.png', 
+  'Par': '/icons/par.png',
+  'Bogey': '/icons/bogey.png',
+  'Double Bogey': '/icons/double-bogey.png',
+  'Triple Bogey': '/icons/triple-bogey.png',
+  'Albatross': '/icons/albatross.png',
+  'default': '/icons/default.png'
+};
+
+function getPerformance(total: number, par: number): { label: string; emoji: string; color: string; icon: string } {
+  const diff = total - par;
+  let label: string;
+  let emoji: string;
+  let color: string;
+  
+  if (diff === -3) {
+    label = 'Albatross';
+    emoji = '🦅';
+    color = '#FFD700';
+  } else if (diff === -2) {
+    label = 'Eagle';
+    emoji = '🦅';
+    color = '#FFD700';
+  } else if (diff === -1) {
+    label = 'Birdie';
+    emoji = '🐦';
+    color = '#32CD32';
+  } else if (diff === 0) {
+    label = 'Par';
+    emoji = '👍';
+    color = '#4169E1';
+  } else if (diff === 1) {
+    label = 'Bogey';
+    emoji = '😅';
+    color = '#FFA500';
+  } else if (diff === 2) {
+    label = 'Double Bogey';
+    emoji = '😰';
+    color = '#FF6347';
+  } else if (diff === 3) {
+    label = 'Triple Bogey';
+    emoji = '😱';
+    color = '#DC143C';
+  } else if (diff >= 4) {
+    label = `${diff} Over Par`;
+    emoji = '💀';
+    color = '#8B0000';
+  } else {
+    label = `${Math.abs(diff)} Under Par`;
+    emoji = '⭐';
+    color = '#FFD700';
+  }
+  
+  return { 
+    label, 
+    emoji, 
+    color, 
+    icon: performanceIcons[label] || performanceIcons.default 
+  };
+}
+
 function App() {
   const [users, setUsers] = useState<string[]>(() => {
     const saved = window.localStorage.getItem('parkids-users');
@@ -355,18 +419,32 @@ const courses: Course[] = [
             const holeData = selectedCourse.holes[index];
             const distance = holeData ? holeData[selectedTee] : 0;
             const par = holeData ? holeData.par : 3;
-            const getEmoji = (s: number) => {
-              if (s === 1) return '🏆';
-              if (s === 2) return '🥈';
-              if (s === 3) return '🥉';
-              if (s <= 5) return '🎯';
-              return '⛳';
-            };
+            const performance = getPerformance(score.total, par);
             return (
               <div key={index} className="hole-card">
-                <h3>Hole {index + 1} {getEmoji(score.total)}</h3>
+                <h3>Hole {index + 1}</h3>
                 <div className="hole-info">
                   <small>Par {par} • {distance}yd</small>
+                </div>
+                <div className="performance-badge" style={{ 
+                  backgroundColor: performance.color, 
+                  color: 'white', 
+                  padding: '8px', 
+                  borderRadius: '12px', 
+                  fontSize: '0.9rem', 
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  margin: '8px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}>
+                  <span style={{ fontSize: '1.2rem' }}>{performance.emoji}</span>
+                  <span>{performance.label}</span>
+                  {/* Optional: Uncomment when icons are downloaded
+                  <img src={performance.icon} alt={performance.label} style={{ width: '20px', height: '20px' }} />
+                  */}
                 </div>
                 
                 <div className="shot-breakdown">
