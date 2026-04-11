@@ -195,13 +195,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .hole-number-circle {
   width: auto;
-  min-width: 70px;
-  height: 60px;
+  min-width: 60px;
+  height: 50px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -209,10 +209,10 @@ body {
   color: white;
   font-weight: bold;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   position: relative;
   overflow: hidden;
-  padding: 0 12px;
+  padding: 0 8px;
 }
 
 .hole-number-circle::before {
@@ -240,8 +240,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 1.1rem;
+  gap: 4px;
+  font-size: 0.95rem;
 }
 
 .hole-details {
@@ -249,11 +249,11 @@ body {
 }
 
 .par-distance {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #64748b;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.8);
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 20px;
   border: 1px solid #e2e8f0;
 }
@@ -262,8 +262,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 10px 0;
+  gap: 8px;
+  margin: 8px 0;
   width: 100%;
 }
 
@@ -271,12 +271,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   min-width: 0;
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 2px solid #dee2e6;
   transition: all 0.3s ease;
 }
