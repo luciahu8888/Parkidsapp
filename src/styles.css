@@ -169,7 +169,7 @@ body {
 .hole-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .hole-card {
@@ -181,6 +181,7 @@ body {
   min-height: 300px;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(218, 165, 32, 0.2);
 }
@@ -190,15 +191,71 @@ body {
   box-shadow: 0 8px 25px rgba(218, 165, 32, 0.3);
 }
 
-.hole-card h3 {
-  margin: 0 0 5px;
-  font-size: 1rem;
+.fancy-hole-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.hole-info {
-  margin: 5px 0;
-  font-size: 0.8rem;
-  color: #475569;
+.hole-number-circle {
+  width: auto;
+  min-width: 70px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
+  padding: 0 12px;
+}
+
+.hole-number-circle::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  transform: rotate(45deg);
+  transition: all 0.3s ease;
+}
+
+.hole-number-circle:hover::before {
+  animation: shine 1.5s ease-in-out;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.hole-icon-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 1.1rem;
+}
+
+.hole-details {
+  text-align: center;
+}
+
+.par-distance {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
 }
 
 .shot-breakdown {
@@ -207,12 +264,16 @@ body {
   flex-direction: column;
   gap: 10px;
   margin: 10px 0;
+  width: 100%;
 }
 
 .shot-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   border-radius: 12px;
   padding: 8px 12px;
@@ -232,6 +293,15 @@ body {
   gap: 8px;
   font-weight: 600;
   color: #495057;
+  min-width: 0;
+}
+
+.shot-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
 }
 
 .shot-icon {

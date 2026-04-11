@@ -38,6 +38,18 @@ type RoundRecord = {
 
 const defaultHoleCount = 9;
 
+// Icon mappings
+const shotIcons = {
+  driver: '/icons/Driver.png',
+  fairway: '/icons/Fairway.png',
+  iron: '/icons/Iron.png',
+  pitching: '/icons/Pitching.png',
+  putting: '/icons/Putting.png',
+  player: '/icons/Player.png',
+  golfcourse: '/icons/GolfCourse.png',
+  tee: '/icons/tee.png'
+};
+
 const createEmptyHoleScore = (): HoleScore => ({
   total: 0,
   breakdown: {
@@ -60,15 +72,21 @@ function formatDate(date: Date) {
   });
 }
 
-// Shot type icons mapping
-const shotIcons: Record<string, string> = {
-  driver: '/icons/Driver.png',
-  fairway: '/icons/Fairway.png',
-  iron: '/icons/Iron.png',
-  pitching: '/icons/Pitching.png',
-  putting: '/icons/Putting.png',
-  player: '/icons/Player.png',
-  golfcourse: '/icons/GolfCourse.png'
+// Fancy hole number display function
+const getFancyHoleNumber = (holeIndex: number) => {
+  const holeNumber = holeIndex + 1;
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2',
+    '#AED6F1', '#A3E4D7', '#F9E79F'
+  ];
+
+  return {
+    number: holeNumber,
+    color: colors[holeIndex % colors.length],
+    emoji: '⛳'
+  };
 };
 
 function getPerformance(total: number, par: number): { label: string; emoji: string; color: string } {
@@ -322,10 +340,11 @@ const courses: Course[] = [
             {users.map((user) => (
               <button
                 key={user}
-                className="button"
+                className="button player-button"
                 onClick={() => setCurrentUser(user)}
               >
-                👤 {user}
+                <img src={shotIcons.player} alt="Player" className="button-icon" />
+                {user}
               </button>
             ))}
           </div>
@@ -372,14 +391,17 @@ const courses: Course[] = [
           </div>
 
           <div style={{ marginTop: '18px' }}>
-            <label style={{ display: 'block', marginBottom: '8px' }}>🏌️ Select Course:</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
+              <img src={shotIcons.golfcourse} alt="Course" className="label-icon" />
+              Select Course:
+            </label>
             <select
               value={selectedCourse.name}
               onChange={(e) => {
                 const course = courses.find(c => c.name === e.target.value);
                 if (course) setSelectedCourse(course);
               }}
-              style={{ padding: '8px', borderRadius: '8px', border: '1px solid #dbeafe' }}
+              style={{ padding: '8px', borderRadius: '8px', border: '1px solid #dbeafe', width: '100%' }}
             >
               {courses.map((course) => (
                 <option key={course.name} value={course.name}>{course.name}</option>
@@ -388,7 +410,10 @@ const courses: Course[] = [
           </div>
 
           <div style={{ marginTop: '18px' }}>
-            <label style={{ display: 'block', marginBottom: '8px' }}>🎯 Select Tee:</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
+              <span style={{ fontSize: '1.2rem' }}>⛳</span>
+              Select Tee:
+            </label>
             <div className="buttons-row">
               {(['blue', 'white', 'red'] as const).map((tee) => (
                 <button
@@ -418,11 +443,16 @@ const courses: Course[] = [
             const distance = holeData ? holeData[selectedTee] : 0;
             const par = holeData ? holeData.par : 3;
             const performance = getPerformance(score.total, par);
+            const fancyHole = getFancyHoleNumber(index);
             return (
               <div key={index} className="hole-card">
-                <h3>Hole {index + 1}</h3>
-                <div className="hole-info">
-                  <small>Par {par} • {distance}yd</small>
+                <div className="fancy-hole-header">
+                  <div className="hole-number-circle" style={{ backgroundColor: fancyHole.color }}>
+                    <span className="hole-icon-number">{fancyHole.emoji} {fancyHole.number}</span>
+                  </div>
+                  <div className="hole-details">
+                    <div className="par-distance">Par {par} • {distance}yd</div>
+                  </div>
                 </div>
                 <div className="performance-badge" style={{ 
                   backgroundColor: performance.color, 
