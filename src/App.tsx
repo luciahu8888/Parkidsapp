@@ -60,19 +60,18 @@ function formatDate(date: Date) {
   });
 }
 
-// Performance icons mapping (you can replace with downloaded icons from icons8)
-const performanceIcons: Record<string, string> = {
-  'Eagle': '/icons/eagle.png',
-  'Birdie': '/icons/birdie.png', 
-  'Par': '/icons/par.png',
-  'Bogey': '/icons/bogey.png',
-  'Double Bogey': '/icons/double-bogey.png',
-  'Triple Bogey': '/icons/triple-bogey.png',
-  'Albatross': '/icons/albatross.png',
-  'default': '/icons/default.png'
+// Shot type icons mapping
+const shotIcons: Record<string, string> = {
+  driver: '/icons/Driver.png',
+  fairway: '/icons/Fairway.png',
+  iron: '/icons/Iron.png',
+  pitching: '/icons/Pitching.png',
+  putting: '/icons/Putting.png',
+  player: '/icons/Player.png',
+  golfcourse: '/icons/GolfCourse.png'
 };
 
-function getPerformance(total: number, par: number): { label: string; emoji: string; color: string; icon: string } {
+function getPerformance(total: number, par: number): { label: string; emoji: string; color: string } {
   const diff = total - par;
   let label: string;
   let emoji: string;
@@ -119,8 +118,7 @@ function getPerformance(total: number, par: number): { label: string; emoji: str
   return { 
     label, 
     emoji, 
-    color, 
-    icon: performanceIcons[label] || performanceIcons.default 
+    color
   };
 }
 
@@ -449,47 +447,62 @@ const courses: Course[] = [
                 
                 <div className="shot-breakdown">
                   <div className="shot-row">
-                    <span>🏌️‍♂️ Driver:</span>
+                    <div className="shot-label">
+                      <img src={shotIcons.driver} alt="Driver" className="shot-icon" />
+                      <span>Driver</span>
+                    </div>
                     <div className="shot-controls">
-                      <button onClick={() => updateShot(index, 'driver', -1)}>-</button>
-                      <span>{score.breakdown.driver}</span>
-                      <button onClick={() => updateShot(index, 'driver', 1)}>+</button>
+                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'driver', -1)}>-</button>
+                      <span className="shot-count">{score.breakdown.driver}</span>
+                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'driver', 1)}>+</button>
                     </div>
                   </div>
                   
                   <div className="shot-row">
-                    <span>🌳 Fairway:</span>
+                    <div className="shot-label">
+                      <img src={shotIcons.fairway} alt="Fairway" className="shot-icon" />
+                      <span>Fairway</span>
+                    </div>
                     <div className="shot-controls">
-                      <button onClick={() => updateShot(index, 'fairway', -1)}>-</button>
-                      <span>{score.breakdown.fairway}</span>
-                      <button onClick={() => updateShot(index, 'fairway', 1)}>+</button>
+                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'fairway', -1)}>-</button>
+                      <span className="shot-count">{score.breakdown.fairway}</span>
+                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'fairway', 1)}>+</button>
                     </div>
                   </div>
                   
                   <div className="shot-row">
-                    <span>🔨 Iron:</span>
+                    <div className="shot-label">
+                      <img src={shotIcons.iron} alt="Iron" className="shot-icon" />
+                      <span>Iron</span>
+                    </div>
                     <div className="shot-controls">
-                      <button onClick={() => updateShot(index, 'iron', -1)}>-</button>
-                      <span>{score.breakdown.iron}</span>
-                      <button onClick={() => updateShot(index, 'iron', 1)}>+</button>
+                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'iron', -1)}>-</button>
+                      <span className="shot-count">{score.breakdown.iron}</span>
+                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'iron', 1)}>+</button>
                     </div>
                   </div>
                   
                   <div className="shot-row">
-                    <span>🎯 Pitching:</span>
+                    <div className="shot-label">
+                      <img src={shotIcons.pitching} alt="Pitching" className="shot-icon" />
+                      <span>Pitching</span>
+                    </div>
                     <div className="shot-controls">
-                      <button onClick={() => updateShot(index, 'pitching', -1)}>-</button>
-                      <span>{score.breakdown.pitching}</span>
-                      <button onClick={() => updateShot(index, 'pitching', 1)}>+</button>
+                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'pitching', -1)}>-</button>
+                      <span className="shot-count">{score.breakdown.pitching}</span>
+                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'pitching', 1)}>+</button>
                     </div>
                   </div>
                   
                   <div className="shot-row">
-                    <span>⛳ Putting:</span>
+                    <div className="shot-label">
+                      <img src={shotIcons.putting} alt="Putting" className="shot-icon" />
+                      <span>Putting</span>
+                    </div>
                     <div className="shot-controls">
-                      <button onClick={() => updateShot(index, 'putting', -1)}>-</button>
-                      <span>{score.breakdown.putting}</span>
-                      <button onClick={() => updateShot(index, 'putting', 1)}>+</button>
+                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'putting', -1)}>-</button>
+                      <span className="shot-count">{score.breakdown.putting}</span>
+                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'putting', 1)}>+</button>
                     </div>
                   </div>
                 </div>
