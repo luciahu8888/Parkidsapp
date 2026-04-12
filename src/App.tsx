@@ -518,7 +518,7 @@ function App() {
               }}
               style={{ padding: '8px', borderRadius: '8px', border: '1px solid #dbeafe', width: '100%' }}
             >
-              <option value="" disabled>⛳ Please choose the golf course you are playing...</option>
+              <option value="" disabled>⛳ Choose your golf course...</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.name}>{course.name}</option>
               ))}
