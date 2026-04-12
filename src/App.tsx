@@ -321,6 +321,27 @@ const courses: Course[] = [
     }
   };
 
+  const deleteUser = (userToDelete: string) => {
+    if (users.length <= 1) {
+      alert('Cannot delete the last golfer!');
+      return;
+    }
+    
+    if (confirm(`Are you sure you want to delete "${userToDelete}"? This will also delete their game history.`)) {
+      // Remove user from users list
+      setUsers((prev) => prev.filter(user => user !== userToDelete));
+      
+      // Clear their localStorage data
+      window.localStorage.removeItem(`parkids-history-${userToDelete}`);
+      
+      // If deleting current user, switch to another user
+      if (currentUser === userToDelete) {
+        const remainingUsers = users.filter(user => user !== userToDelete);
+        setCurrentUser(remainingUsers[0] || '');
+      }
+    }
+  };
+
   if (!currentUser) {
     return (
       <div className="app-shell">
@@ -338,14 +359,22 @@ const courses: Course[] = [
           <h2>Choose Golfer</h2>
           <div className="buttons-row">
             {users.map((user) => (
-              <button
-                key={user}
-                className="button player-button"
-                onClick={() => setCurrentUser(user)}
-              >
-                <img src={shotIcons.player} alt="Player" className="button-icon" />
-                {user}
-              </button>
+              <div key={user} className="player-button-container">
+                <button
+                  className="button player-button"
+                  onClick={() => setCurrentUser(user)}
+                >
+                  <img src={shotIcons.player} alt="Player" className="button-icon" />
+                  {user}
+                </button>
+                <button
+                  className="delete-player-btn"
+                  onClick={() => deleteUser(user)}
+                  title={`Delete ${user}`}
+                >
+                  🗑️
+                </button>
+              </div>
             ))}
           </div>
 
