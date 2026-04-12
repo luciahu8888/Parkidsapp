@@ -683,16 +683,22 @@ function App() {
         <h2>📈 Progress dashboard</h2>
         <div className="summary-list">
           <div className="summary-item">
-            <strong>🏆 Best score</strong>
-            {bestScore === null ? 'Play a round to see your best score.' : `${bestScore}`}
+            <span className="summary-label">🏆 Best score</span>
+            <span className="summary-badge summary-badge--gold">
+              {bestScore === null ? '—' : bestScore}
+            </span>
           </div>
           <div className="summary-item">
-            <strong>📊 Average score</strong>
-            {averageScore === null ? 'Save a few rounds to track progress.' : `${averageScore}`}
+            <span className="summary-label">📊 Average score</span>
+            <span className="summary-badge summary-badge--blue">
+              {averageScore === null ? '—' : averageScore}
+            </span>
           </div>
           <div className="summary-item">
-            <strong>🎮 Total rounds saved</strong>
-            {history.length}
+            <span className="summary-label">🎮 Total rounds saved</span>
+            <span className="summary-badge summary-badge--green">
+              {history.length}
+            </span>
           </div>
         </div>
         <div className="analysis-box">
@@ -731,8 +737,19 @@ function App() {
                 <div key={round.id} className="history-item">
                   <strong>📅 {round.date_played} at {courses.find(c => c.id === round.course_id)?.name || 'Unknown Course'} ({round.tee_color} tee)</strong>
                   <div>{round.hole_count} holes • Score {round.total_score} (Par {round.total_par}) • {round.total_score - round.total_par > 0 ? '+' : ''}{round.total_score - round.total_par} 🏌️</div>
-                  <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#64748b' }}>
-                    🏌️‍♂️{totalShots.driver} 🌳{totalShots.fairway} 🔨{totalShots.iron} 🎯{totalShots.pitching} ⛳{totalShots.putting}
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
+                    {[
+                      { icon: shotIcons.driver,   label: 'Driver',   count: totalShots.driver },
+                      { icon: shotIcons.fairway,  label: 'Fairway',  count: totalShots.fairway },
+                      { icon: shotIcons.iron,     label: 'Iron',     count: totalShots.iron },
+                      { icon: shotIcons.pitching, label: 'Pitching', count: totalShots.pitching },
+                      { icon: shotIcons.putting,  label: 'Putting',  count: totalShots.putting },
+                    ].map(({ icon, label, count }) => (
+                      <span key={label} style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.85rem', color: '#374151' }}>
+                        <img src={icon} alt={label} style={{ width: '18px', height: '18px', objectFit: 'contain' }} />
+                        {count}
+                      </span>
+                    ))}
                   </div>
                 </div>
               );

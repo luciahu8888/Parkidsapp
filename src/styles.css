@@ -596,7 +596,38 @@ body {
   padding: 14px;
 }
 
-..summary-item strong,
+.summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary-label {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #1e3a5f;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.summary-badge--gold  { background: linear-gradient(135deg, #f5a623, #f7c35f); }
+.summary-badge--blue  { background: linear-gradient(135deg, #4a90d9, #6db8f7); }
+.summary-badge--green { background: linear-gradient(135deg, #27ae60, #6fcf97); }
+
+.summary-item strong,
 .history-item strong {
   display: block;
   margin-bottom: 6px;
