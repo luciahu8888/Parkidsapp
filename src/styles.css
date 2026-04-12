@@ -379,7 +379,7 @@ body {
 
 /* Performance Section */
 .performance-section {
-  margin: 16px 0;
+  margin: 8px 0 4px;
 }
 
 .performance-badge {
@@ -408,7 +408,7 @@ body {
 /* Shots Section */
 .shots-section {
   flex: 1;
-  margin-top: 12px;
+  margin-top: 6px;
 }
 
 .shots-title {
