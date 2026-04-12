@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { userService, courseService, roundService, migrationService, type User, type DBCourse, type Round, type DBHole } from './services/database';
+import { getAiAnalysis, type AiAnalysisRequest } from './services/aiService';
 
 type HoleData = {
   par: number;
@@ -143,6 +144,11 @@ function App() {
   const [holeCount, setHoleCount] = useState(defaultHoleCount);
   const [scores, setScores] = useState<HoleScore[]>(createEmptyScores(defaultHoleCount));
   const [history, setHistory] = useState<Round[]>([]);
+  const [aiAnalysis, setAiAnalysis] = useState<{ currentRound: string; history: string }>({
+    currentRound: 'AI insights will appear here after you start scoring.',
+    history: 'Save rounds to get AI trend feedback.',
+  });
+  const [aiLoading, setAiLoading] = useState(false);
 
   // Load initial data from Supabase
   useEffect(() => {
@@ -277,6 +283,60 @@ function App() {
   const totalPar = useMemo(() => {
     return selectedCourse ? selectedCourse.holes.slice(0, holeCount).reduce((sum, hole) => sum + hole.par, 0) : 0;
   }, [selectedCourse, holeCount]);
+
+  const aiRequestData = useMemo<AiAnalysisRequest>(() => ({
+    courseName: selectedCourse?.name || 'Unknown course',
+    teeColor: selectedTee,
+    holeCount,
+    totalScore,
+    totalPar,
+    holeSummaries: selectedCourse
+      ? scores.slice(0, holeCount).map((score, index) => ({
+          hole: index + 1,
+          par: selectedCourse.holes[index].par,
+          total: score.total,
+          driver: score.breakdown.driver,
+          fairway: score.breakdown.fairway,
+          iron: score.breakdown.iron,
+          pitching: score.breakdown.pitching,
+          putting: score.breakdown.putting,
+        }))
+      : [],
+    recentRounds: history.slice(-5).map((round) => ({
+      date: round.date_played,
+      total_score: round.total_score,
+      total_par: round.total_par,
+      hole_count: round.hole_count,
+      score_diff: round.total_score - round.total_par,
+    })),
+  }), [selectedCourse, selectedTee, holeCount, totalScore, totalPar, scores, history]);
+
+  useEffect(() => {
+    if (!selectedCourse) {
+      setAiAnalysis({
+        currentRound: 'Select a course and start scoring to get AI-powered coaching.',
+        history: 'AI history insights are available after you save at least one round.',
+      });
+      return;
+    }
+
+    let active = true;
+    setAiLoading(true);
+
+    getAiAnalysis(aiRequestData)
+      .then((analysis) => {
+        if (!active) return;
+        setAiAnalysis(analysis);
+      })
+      .finally(() => {
+        if (!active) return;
+        setAiLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedCourse, aiRequestData]);
 
   const saveRound = async () => {
     if (!currentUser || !selectedCourse) return;
@@ -634,6 +694,17 @@ function App() {
             <strong>🎮 Total rounds saved</strong>
             {history.length}
           </div>
+        </div>
+        <div className="analysis-box">
+          <strong>🤖 AI Analysis</strong>
+          {aiLoading ? (
+            <p>Loading AI recommendations...</p>
+          ) : (
+            <>
+              <p>{aiAnalysis.currentRound}</p>
+              <p>{aiAnalysis.history}</p>
+            </>
+          )}
         </div>
       </section>
 

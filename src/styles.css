@@ -596,10 +596,32 @@ body {
   padding: 14px;
 }
 
-.summary-item strong,
+..summary-item strong,
 .history-item strong {
   display: block;
   margin-bottom: 6px;
+}
+
+.analysis-box {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fdf7e0, #fff4d9);
+  border: 1px solid #f5d187;
+  color: #4a4a4a;
+  box-shadow: 0 6px 18px rgba(253, 231, 135, 0.22);
+}
+
+.analysis-box strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #444;
+}
+
+.analysis-box p {
+  margin: 4px 0;
+  line-height: 1.4;
+  font-size: 0.95rem;
 }
 
 .history-item {
