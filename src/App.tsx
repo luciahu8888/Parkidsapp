@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { userService, courseService, roundService, migrationService, type User, type DBCourse, type Round, type DBHole } from './services/database';
 
 type HoleData = {
   par: number;
@@ -8,6 +9,7 @@ type HoleData = {
 };
 
 type Course = {
+  id: string;
   name: string;
   holes: HoleData[];
 };
@@ -23,17 +25,6 @@ type ShotBreakdown = {
 type HoleScore = {
   total: number;
   breakdown: ShotBreakdown;
-};
-
-type RoundRecord = {
-  id: string;
-  date: string;
-  holes: number;
-  total: number;
-  course: string;
-  tee: string;
-  par: number;
-  scores: HoleScore[]; // 改为详细的每洞得分
 };
 
 const defaultHoleCount = 9;
@@ -141,123 +132,114 @@ function getPerformance(total: number, par: number): { label: string; emoji: str
 }
 
 function App() {
-  const [users, setUsers] = useState<string[]>(() => {
-    const saved = window.localStorage.getItem('parkids-users');
-    return saved ? JSON.parse(saved) : ['Kid 1', 'Kid 2'];
-  });
-  const [currentUser, setCurrentUser] = useState<string>('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newUserName, setNewUserName] = useState('');
-const courses: Course[] = [
-  {
-    name: 'Bellevue Golf Course',
-    holes: [
-      { par: 4, blue: 377, white: 292, red: 265 },
-      { par: 4, blue: 485, white: 293, red: 279 },
-      { par: 3, blue: 147, white: 120, red: 105 },
-      { par: 4, blue: 396, white: 292, red: 261 },
-      { par: 4, blue: 485, white: 308, red: 290 },
-      { par: 3, blue: 170, white: 131, red: 96 },
-      { par: 5, blue: 340, white: 474, red: 436 },
-      { par: 4, blue: 198, white: 360, red: 339 },
-      { par: 5, blue: 341, white: 462, red: 438 },
-      { par: 4, blue: 324, white: 292, red: 265 },
-      { par: 4, blue: 326, white: 293, red: 279 },
-      { par: 3, blue: 148, white: 120, red: 105 },
-      { par: 4, blue: 306, white: 292, red: 261 },
-      { par: 4, blue: 329, white: 308, red: 290 },
-      { par: 3, blue: 159, white: 131, red: 96 },
-      { par: 5, blue: 494, white: 474, red: 339 },
-      { par: 4, blue: 395, white: 360, red: 236 },
-      { par: 5, blue: 525, white: 462, red: 301 }
-    ]
-  },
-  {
-    name: "Eagle's Talon",
-    holes: [
-      { par: 4, blue: 386, white: 350, red: 278 },
-      { par: 5, blue: 557, white: 520, red: 449 },
-      { par: 4, blue: 368, white: 355, red: 288 },
-      { par: 4, blue: 423, white: 397, red: 341 },
-      { par: 4, blue: 449, white: 411, red: 343 },
-      { par: 4, blue: 401, white: 357, red: 343 },
-      { par: 3, blue: 178, white: 143, red: 111 },
-      { par: 4, blue: 350, white: 319, red: 283 },
-      { par: 3, blue: 169, white: 138, red: 98 },
-      { par: 5, blue: 551, white: 521, red: 449 },
-      { par: 5, blue: 482, white: 444, red: 400 },
-      { par: 4, blue: 359, white: 325, red: 264 },
-      { par: 4, blue: 376, white: 356, red: 299 },
-      { par: 3, blue: 198, white: 171, red: 143 },
-      { par: 4, blue: 441, white: 394, red: 336 },
-      { par: 4, blue: 415, white: 383, red: 307 },
-      { par: 3, blue: 174, white: 155, red: 117 },
-      { par: 5, blue: 566, white: 555, red: 449 }
-    ]
-  },
-  {
-    name: 'Coyote Creek',
-    holes: [
-      { par: 4, blue: 365, white: 326, red: 301 },
-      { par: 5, blue: 530, white: 499, red: 482 },
-      { par: 4, blue: 398, white: 360, red: 336 },
-      { par: 4, blue: 373, white: 344, red: 321 },
-      { par: 3, blue: 183, white: 147, red: 116 },
-      { par: 4, blue: 331, white: 308, red: 284 },
-      { par: 4, blue: 306, white: 279, red: 279 },
-      { par: 5, blue: 460, white: 436, red: 409 },
-      { par: 3, blue: 135, white: 109, red: 109 },
-      { par: 5, blue: 548, white: 506, red: 479 },
-      { par: 4, blue: 379, white: 327, red: 323 },
-      { par: 4, blue: 410, white: 388, red: 372 },
-      { par: 3, blue: 150, white: 120, red: 85 },
-      { par: 4, blue: 377, white: 324, red: 281 },
-      { par: 4, blue: 436, white: 397, red: 355 },
-      { par: 4, blue: 299, white: 278, red: 278 },
-      { par: 3, blue: 165, white: 165, red: 146 },
-      { par: 5, blue: 499, white: 483, red: 443 }
-    ]
-  },
-  {
-    name: 'Heron Links',
-    holes: [
-      { par: 4, blue: 86, white: 86, red: 86 },
-      { par: 4, blue: 125, white: 125, red: 125 },
-      { par: 4, blue: 95, white: 95, red: 95 },
-      { par: 4, blue: 147, white: 147, red: 147 },
-      { par: 4, blue: 98, white: 98, red: 98 },
-      { par: 4, blue: 158, white: 158, red: 158 },
-      { par: 4, blue: 170, white: 170, red: 170 },
-      { par: 4, blue: 127, white: 127, red: 127 },
-      { par: 4, blue: 101, white: 101, red: 101 }
-    ]
-  }
-];
-  const [selectedCourse, setSelectedCourse] = useState<Course>(courses[0]);
+
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedTee, setSelectedTee] = useState<'blue' | 'white' | 'red'>('white');
   const [holeCount, setHoleCount] = useState(defaultHoleCount);
   const [scores, setScores] = useState<HoleScore[]>(createEmptyScores(defaultHoleCount));
-  const [history, setHistory] = useState<RoundRecord[]>([]);
+  const [history, setHistory] = useState<Round[]>([]);
 
+  // Load initial data from Supabase
   useEffect(() => {
-    window.localStorage.setItem('parkids-users', JSON.stringify(users));
-  }, [users]);
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
 
+        // Load users
+        const usersData = await userService.getAllUsers();
+        setUsers(usersData);
+
+        // Load courses
+        const dbCourses: DBCourse[] = await courseService.getAllCourses();
+        console.log('Loaded DB courses:', dbCourses);
+        console.log('DB courses with holes:', dbCourses.map(c => ({ name: c.name, holesCount: c.holes.length })));
+
+        // If no courses found, try to populate the database
+        if (dbCourses.length === 0) {
+          console.log('No courses found, attempting to populate database...');
+          const populated = await migrationService.checkAndPopulateDatabase();
+          console.log('Database population result:', populated);
+          if (populated) {
+            // Reload courses after population
+            const newDbCourses = await courseService.getAllCourses();
+            console.log('Courses after population:', newDbCourses.length);
+            const coursesData: Course[] = newDbCourses.map(course => ({
+              id: course.id,
+              name: course.name,
+              holes: course.holes.map((hole: DBHole) => ({
+                par: hole.par,
+                blue: hole.blue_distance,
+                white: hole.white_distance,
+                red: hole.red_distance
+              }))
+            }));
+            console.log('Mapped courses after population:', coursesData.length);
+            setCourses(coursesData);
+          } else {
+            console.error('Failed to populate database');
+            setCourses([]);
+          }
+        } else {
+          const coursesData: Course[] = dbCourses.map(course => ({
+            id: course.id,
+            name: course.name,
+            holes: course.holes.map((hole: DBHole) => ({
+              par: hole.par,
+              blue: hole.blue_distance,
+              white: hole.white_distance,
+              red: hole.red_distance
+            }))
+          }));
+          console.log('Mapped courses data:', coursesData);
+          console.log('First course holes sample:', coursesData[0]?.holes?.slice(0, 3));
+          setCourses(coursesData);
+        }
+
+        // Try to migrate localStorage data if users exist but no Supabase data
+        if (usersData.length === 0) {
+          const migrated = await migrationService.migrateLocalStorageToSupabase();
+          if (migrated) {
+            // Reload data after migration
+            const newUsersData = await userService.getAllUsers();
+            setUsers(newUsersData);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        // Fallback to localStorage if Supabase fails
+        const localUsers = JSON.parse(localStorage.getItem('parkids-users') || '["Kid 1", "Kid 2"]');
+        setUsers(localUsers.map((name: string) => ({ id: name, name, created_at: '', updated_at: '' })));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
+
+  // Load user history when current user changes
   useEffect(() => {
-    if (currentUser) {
-      const savedHistory = window.localStorage.getItem(`parkids-history-${currentUser}`);
-      if (savedHistory) {
-        setHistory(JSON.parse(savedHistory));
+    const loadUserHistory = async () => {
+      if (currentUser) {
+        try {
+          const userRounds = await roundService.getUserRounds(currentUser.id);
+          setHistory(userRounds);
+        } catch (error) {
+          console.error('Error loading user history:', error);
+          setHistory([]);
+        }
       } else {
         setHistory([]);
       }
-    }
-  }, [currentUser]);
+    };
 
-  useEffect(() => {
-    if (currentUser) {
-      window.localStorage.setItem(`parkids-history-${currentUser}`, JSON.stringify(history));
-    }
-  }, [history, currentUser]);
+    loadUserHistory();
+  }, [currentUser]);
 
   useEffect(() => {
     setScores(createEmptyScores(holeCount));
@@ -266,11 +248,11 @@ const courses: Course[] = [
   const totalScore = useMemo(() => scores.reduce((sum, score) => sum + score.total, 0), [scores]);
   const bestScore = useMemo(() => {
     if (history.length === 0) return null;
-    return Math.min(...history.map((round) => round.total));
+    return Math.min(...history.map((round) => round.total_score));
   }, [history]);
   const averageScore = useMemo(() => {
     if (history.length === 0) return null;
-    return Math.round(history.reduce((sum, round) => sum + round.total, 0) / history.length);
+    return Math.round(history.reduce((sum, round) => sum + round.total_score, 0) / history.length);
   }, [history]);
 
   const updateShot = (holeIndex: number, shotType: keyof ShotBreakdown, delta: number) => {
@@ -293,54 +275,96 @@ const courses: Course[] = [
   };
 
   const totalPar = useMemo(() => {
-    return selectedCourse.holes.slice(0, holeCount).reduce((sum, hole) => sum + hole.par, 0);
+    return selectedCourse ? selectedCourse.holes.slice(0, holeCount).reduce((sum, hole) => sum + hole.par, 0) : 0;
   }, [selectedCourse, holeCount]);
 
-  const saveRound = () => {
-    const record: RoundRecord = {
-      id: `${Date.now()}`,
-      date: formatDate(new Date()),
-      holes: holeCount,
-      total: totalScore,
-      course: selectedCourse.name,
-      tee: selectedTee,
-      par: totalPar,
-      scores: scores.slice(0, holeCount), // 保存详细的每洞得分
-    };
-    setHistory((existing) => [record, ...existing].slice(0, 12));
+  const saveRound = async () => {
+    if (!currentUser || !selectedCourse) return;
+
+    try {
+      const roundData = {
+        user_id: currentUser.id,
+        course_id: selectedCourse.id,
+        tee_color: selectedTee,
+        hole_count: holeCount,
+        total_score: totalScore,
+        total_par: totalPar,
+        date_played: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+        hole_scores: scores.slice(0, holeCount).map((score, index) => ({
+          hole_number: index + 1,
+          total_shots: score.total,
+          driver_shots: score.breakdown.driver,
+          fairway_shots: score.breakdown.fairway,
+          iron_shots: score.breakdown.iron,
+          pitching_shots: score.breakdown.pitching,
+          putting_shots: score.breakdown.putting
+        }))
+      };
+
+      await roundService.saveRound(roundData);
+
+      // Reload history to get the updated data
+      const userRounds = await roundService.getUserRounds(currentUser.id);
+      setHistory(userRounds);
+
+      // Reset scores for next round
+      setScores(createEmptyScores(holeCount));
+    } catch (error) {
+      console.error('Error saving round:', error);
+      alert('Failed to save round. Please try again.');
+    }
   };
 
   const resetRound = () => {
     setScores(createEmptyScores(holeCount));
   };
 
-  const addUser = () => {
-    if (newUserName.trim() && !users.includes(newUserName.trim())) {
-      setUsers((prev) => [...prev, newUserName.trim()]);
-      setNewUserName('');
+  const addUser = async () => {
+    if (newUserName.trim() && !users.some(user => user.name === newUserName.trim())) {
+      try {
+        const newUser = await userService.createUser(newUserName.trim());
+        setUsers((prev) => [...prev, newUser]);
+        setNewUserName('');
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert('Failed to create user. Please try again.');
+      }
     }
   };
 
-  const deleteUser = (userToDelete: string) => {
+  const deleteUser = async (userToDelete: User) => {
     if (users.length <= 1) {
       alert('Cannot delete the last golfer!');
       return;
     }
-    
-    if (confirm(`Are you sure you want to delete "${userToDelete}"? This will also delete their game history.`)) {
-      // Remove user from users list
-      setUsers((prev) => prev.filter(user => user !== userToDelete));
-      
-      // Clear their localStorage data
-      window.localStorage.removeItem(`parkids-history-${userToDelete}`);
-      
-      // If deleting current user, switch to another user
-      if (currentUser === userToDelete) {
-        const remainingUsers = users.filter(user => user !== userToDelete);
-        setCurrentUser(remainingUsers[0] || '');
+
+    if (confirm(`Are you sure you want to delete "${userToDelete.name}"? This will also delete their game history.`)) {
+      try {
+        await userService.deleteUser(userToDelete.id);
+        setUsers((prev) => prev.filter(user => user.id !== userToDelete.id));
+
+        // If deleting current user, switch to another user
+        if (currentUser?.id === userToDelete.id) {
+          const remainingUsers = users.filter(user => user.id !== userToDelete.id);
+          setCurrentUser(remainingUsers[0] || null);
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Failed to delete user. Please try again.');
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="app-shell">
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <h2>⛳ Loading Parkids...</h2>
+          <p>Please wait while we connect to the database.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (
@@ -359,18 +383,18 @@ const courses: Course[] = [
           <h2>Choose Golfer</h2>
           <div className="buttons-row">
             {users.map((user) => (
-              <div key={user} className="player-button-container">
+              <div key={user.id} className="player-button-container">
                 <button
                   className="button player-button"
                   onClick={() => setCurrentUser(user)}
                 >
                   <img src={shotIcons.player} alt="Player" className="button-icon" />
-                  {user}
+                  {user.name}
                 </button>
                 <button
                   className="delete-player-btn"
                   onClick={() => deleteUser(user)}
-                  title={`Delete ${user}`}
+                  title={`Delete ${user.name}`}
                 >
                   🗑️
                 </button>
@@ -402,7 +426,7 @@ const courses: Course[] = [
           <span style={{ fontSize: '1.75rem' }}>⛳</span>
           <div>
             <h1>Parkids</h1>
-            <p className="subtext">Playing as {currentUser}. <button className="button secondary" style={{ fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => setCurrentUser('')}>🔄 Switch Golfer</button></p>
+            <p className="subtext">Playing as {currentUser?.name}. <button className="button secondary" style={{ fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => setCurrentUser(null)}>🔄 Switch Golfer</button></p>
           </div>
         </div>
 
@@ -422,18 +446,20 @@ const courses: Course[] = [
           <div style={{ marginTop: '18px' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
               <img src={shotIcons.golfcourse} alt="Course" className="label-icon" />
-              Select Course:
+              Select Golf Course:
             </label>
             <select
-              value={selectedCourse.name}
+              value={selectedCourse?.name || ''}
               onChange={(e) => {
                 const course = courses.find(c => c.name === e.target.value);
+                console.log('Selected Golf course:', course);
+                console.log('Course holes:', course?.holes);
                 if (course) setSelectedCourse(course);
               }}
               style={{ padding: '8px', borderRadius: '8px', border: '1px solid #dbeafe', width: '100%' }}
             >
               {courses.map((course) => (
-                <option key={course.name} value={course.name}>{course.name}</option>
+                <option key={course.id} value={course.name}>{course.name}</option>
               ))}
             </select>
           </div>
@@ -468,105 +494,116 @@ const courses: Course[] = [
 
         <div className="hole-grid">
           {scores.map((score, index) => {
-            const holeData = selectedCourse.holes[index];
+            const holeData = selectedCourse?.holes[index];
+            console.log('Hole data for hole', index + 1, ':', holeData);
             const distance = holeData ? holeData[selectedTee] : 0;
+            console.log('Selected tee:', selectedTee, 'Distance:', distance);
             const par = holeData ? holeData.par : 3;
             const performance = getPerformance(score.total, par);
             const fancyHole = getFancyHoleNumber(index);
             return (
               <div key={index} className="hole-card">
-                <div className="fancy-hole-header">
-                  <div className="hole-number-circle" style={{ backgroundColor: fancyHole.color }}>
-                    <span className="hole-icon-number">{fancyHole.emoji} {fancyHole.number}</span>
+                {/* Hole Header */}
+                <div className="hole-header">
+                  <div className="hole-number-badge">
+                    <span className="hole-emoji">{fancyHole.emoji}</span>
+                    <span className="hole-number">{fancyHole.number}</span>
                   </div>
-                  <div className="hole-details">
-                    <div className="par-distance">Par {par} • {distance}yd</div>
-                  </div>
-                </div>
-                <div className="performance-badge" style={{ 
-                  backgroundColor: performance.color, 
-                  color: 'white', 
-                  padding: '8px', 
-                  borderRadius: '12px', 
-                  fontSize: '0.9rem', 
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                  margin: '8px 0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}>
-                  <span style={{ fontSize: '1.2rem' }}>{performance.emoji}</span>
-                  <span>{performance.label}</span>
-                  {/* Optional: Uncomment when icons are downloaded
-                  <img src={performance.icon} alt={performance.label} style={{ width: '20px', height: '20px' }} />
-                  */}
-                </div>
-                
-                <div className="shot-breakdown">
-                  <div className="shot-row">
-                    <div className="shot-label">
-                      <img src={shotIcons.driver} alt="Driver" className="shot-icon" />
-                      <span>Driver</span>
-                    </div>
-                    <div className="shot-controls">
-                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'driver', -1)}>-</button>
-                      <span className="shot-count">{score.breakdown.driver}</span>
-                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'driver', 1)}>+</button>
-                    </div>
-                  </div>
-                  
-                  <div className="shot-row">
-                    <div className="shot-label">
-                      <img src={shotIcons.fairway} alt="Fairway" className="shot-icon" />
-                      <span>Fairway</span>
-                    </div>
-                    <div className="shot-controls">
-                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'fairway', -1)}>-</button>
-                      <span className="shot-count">{score.breakdown.fairway}</span>
-                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'fairway', 1)}>+</button>
-                    </div>
-                  </div>
-                  
-                  <div className="shot-row">
-                    <div className="shot-label">
-                      <img src={shotIcons.iron} alt="Iron" className="shot-icon" />
-                      <span>Iron</span>
-                    </div>
-                    <div className="shot-controls">
-                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'iron', -1)}>-</button>
-                      <span className="shot-count">{score.breakdown.iron}</span>
-                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'iron', 1)}>+</button>
-                    </div>
-                  </div>
-                  
-                  <div className="shot-row">
-                    <div className="shot-label">
-                      <img src={shotIcons.pitching} alt="Pitching" className="shot-icon" />
-                      <span>Pitching</span>
-                    </div>
-                    <div className="shot-controls">
-                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'pitching', -1)}>-</button>
-                      <span className="shot-count">{score.breakdown.pitching}</span>
-                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'pitching', 1)}>+</button>
-                    </div>
-                  </div>
-                  
-                  <div className="shot-row">
-                    <div className="shot-label">
-                      <img src={shotIcons.putting} alt="Putting" className="shot-icon" />
-                      <span>Putting</span>
-                    </div>
-                    <div className="shot-controls">
-                      <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'putting', -1)}>-</button>
-                      <span className="shot-count">{score.breakdown.putting}</span>
-                      <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'putting', 1)}>+</button>
-                    </div>
+                  <div className="hole-info">
+                    <div className="par-info">Par {par}</div>
+                    <div className="distance-info">{distance}yd</div>
                   </div>
                 </div>
-                
-                <div className="score-display">Total: {score.total}</div>
+
+                {/* Prominent Total Score */}
+                <div className="total-score-display">
+                  <div className="score-circle">
+                    <span className="score-number">{score.total}</span>
+                    <span className="score-label">Total</span>
+                  </div>
+                  <div className="score-vs-par">
+                    {score.total - par > 0 && <span className="over-par">+{score.total - par}</span>}
+                    {score.total - par === 0 && <span className="even-par">Even</span>}
+                    {score.total - par < 0 && <span className="under-par">{score.total - par}</span>}
+                  </div>
+                </div>
+
+                {/* Performance Badge */}
+                <div className="performance-section">
+                  <div className="performance-badge" style={{ 
+                    backgroundColor: performance.color, 
+                    color: 'white'
+                  }}>
+                    <span className="performance-emoji">{performance.emoji}</span>
+                    <span className="performance-text">{performance.label}</span>
+                  </div>
+                </div>
+
+                {/* Shot Breakdown */}
+                <div className="shots-section">
+                  <h4 className="shots-title">Shot Breakdown</h4>
+                  <div className="shot-breakdown">
+                    <div className="shot-row">
+                      <div className="shot-label">
+                        <img src={shotIcons.driver} alt="Driver" className="shot-icon" />
+                        <span>Driver</span>
+                      </div>
+                      <div className="shot-controls">
+                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'driver', -1)}>-</button>
+                        <span className="shot-count">{score.breakdown.driver}</span>
+                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'driver', 1)}>+</button>
+                      </div>
+                    </div>
+                    
+                    <div className="shot-row">
+                      <div className="shot-label">
+                        <img src={shotIcons.fairway} alt="Fairway" className="shot-icon" />
+                        <span>Fairway</span>
+                      </div>
+                      <div className="shot-controls">
+                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'fairway', -1)}>-</button>
+                        <span className="shot-count">{score.breakdown.fairway}</span>
+                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'fairway', 1)}>+</button>
+                      </div>
+                    </div>
+                    
+                    <div className="shot-row">
+                      <div className="shot-label">
+                        <img src={shotIcons.iron} alt="Iron" className="shot-icon" />
+                        <span>Iron</span>
+                      </div>
+                      <div className="shot-controls">
+                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'iron', -1)}>-</button>
+                        <span className="shot-count">{score.breakdown.iron}</span>
+                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'iron', 1)}>+</button>
+                      </div>
+                    </div>
+                    
+                    <div className="shot-row">
+                      <div className="shot-label">
+                        <img src={shotIcons.pitching} alt="Pitching" className="shot-icon" />
+                        <span>Pitching</span>
+                      </div>
+                      <div className="shot-controls">
+                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'pitching', -1)}>-</button>
+                        <span className="shot-count">{score.breakdown.pitching}</span>
+                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'pitching', 1)}>+</button>
+                      </div>
+                    </div>
+                    
+                    <div className="shot-row">
+                      <div className="shot-label">
+                        <img src={shotIcons.putting} alt="Putting" className="shot-icon" />
+                        <span>Putting</span>
+                      </div>
+                      <div className="shot-controls">
+                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'putting', -1)}>-</button>
+                        <span className="shot-count">{score.breakdown.putting}</span>
+                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'putting', 1)}>+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -608,21 +645,21 @@ const courses: Course[] = [
           <div className="summary-list">
             {history.map((round) => {
               // 计算击球统计
-              const totalShots = round.scores?.reduce((acc, hole) => {
+              const totalShots = round.hole_scores?.reduce((acc, hole) => {
                 return {
-                  driver: acc.driver + hole.breakdown.driver,
-                  fairway: acc.fairway + hole.breakdown.fairway,
-                  iron: acc.iron + hole.breakdown.iron,
-                  pitching: acc.pitching + hole.breakdown.pitching,
-                  putting: acc.putting + hole.breakdown.putting,
+                  driver: acc.driver + hole.driver_shots,
+                  fairway: acc.fairway + hole.fairway_shots,
+                  iron: acc.iron + hole.iron_shots,
+                  pitching: acc.pitching + hole.pitching_shots,
+                  putting: acc.putting + hole.putting_shots,
                 };
-              }, { driver: 0, fairway: 0, iron: 0, pitching: 0, putting: 0 }) || 
+              }, { driver: 0, fairway: 0, iron: 0, pitching: 0, putting: 0 }) ||
               { driver: 0, fairway: 0, iron: 0, pitching: 0, putting: 0 };
-              
+
               return (
                 <div key={round.id} className="history-item">
-                  <strong>📅 {round.date} at {round.course} ({round.tee} tee)</strong>
-                  <div>{round.holes} holes • Score {round.total} (Par {round.par}) • {round.total - round.par > 0 ? '+' : ''}{round.total - round.par} 🏌️</div>
+                  <strong>📅 {round.date_played} at {courses.find(c => c.id === round.course_id)?.name || 'Unknown Course'} ({round.tee_color} tee)</strong>
+                  <div>{round.hole_count} holes • Score {round.total_score} (Par {round.total_par}) • {round.total_score - round.total_par > 0 ? '+' : ''}{round.total_score - round.total_par} 🏌️</div>
                   <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#64748b' }}>
                     🏌️‍♂️{totalShots.driver} 🌳{totalShots.fairway} 🔨{totalShots.iron} 🎯{totalShots.pitching} ⛳{totalShots.putting}
                   </div>
@@ -635,6 +672,9 @@ const courses: Course[] = [
 
       <footer>
         Keep playing, practicing, and having fun. 🏌️‍♀️ ⛳ 🌳
+        <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748b' }}>
+          Created by luciaHu
+        </div>
       </footer>
     </div>
   );

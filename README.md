@@ -2,6 +2,8 @@
 
 Parkids is a kid-friendly golf score tracker for young golfers and parents. It supports 9 or 18 hole rounds, fast + / - scoring, total score tracking, round history, and progress summaries.
 
+**Created by luciaHu**
+
 ## Getting Started
 
 1. Install dependencies:
