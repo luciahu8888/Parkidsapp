@@ -160,51 +160,30 @@ function App() {
         const usersData = await userService.getAllUsers();
         setUsers(usersData);
 
-        // Load courses
+        // Always run migration so newly added courses are auto-filled for existing databases too.
+        const migrationOk = await migrationService.checkAndPopulateDatabase();
+        if (!migrationOk) {
+          console.error('Course migration failed, loading available courses only.');
+        }
+
+        // Load courses after migration attempt
         const dbCourses: DBCourse[] = await courseService.getAllCourses();
         console.log('Loaded DB courses:', dbCourses);
         console.log('DB courses with holes:', dbCourses.map(c => ({ name: c.name, holesCount: c.holes.length })));
 
-        // If no courses found, try to populate the database
-        if (dbCourses.length === 0) {
-          console.log('No courses found, attempting to populate database...');
-          const populated = await migrationService.checkAndPopulateDatabase();
-          console.log('Database population result:', populated);
-          if (populated) {
-            // Reload courses after population
-            const newDbCourses = await courseService.getAllCourses();
-            console.log('Courses after population:', newDbCourses.length);
-            const coursesData: Course[] = newDbCourses.map(course => ({
-              id: course.id,
-              name: course.name,
-              holes: course.holes.map((hole: DBHole) => ({
-                par: hole.par,
-                blue: hole.blue_distance,
-                white: hole.white_distance,
-                red: hole.red_distance
-              }))
-            }));
-            console.log('Mapped courses after population:', coursesData.length);
-            setCourses(coursesData);
-          } else {
-            console.error('Failed to populate database');
-            setCourses([]);
-          }
-        } else {
-          const coursesData: Course[] = dbCourses.map(course => ({
-            id: course.id,
-            name: course.name,
-            holes: course.holes.map((hole: DBHole) => ({
-              par: hole.par,
-              blue: hole.blue_distance,
-              white: hole.white_distance,
-              red: hole.red_distance
-            }))
-          }));
-          console.log('Mapped courses data:', coursesData);
-          console.log('First course holes sample:', coursesData[0]?.holes?.slice(0, 3));
-          setCourses(coursesData);
-        }
+        const coursesData: Course[] = dbCourses.map(course => ({
+          id: course.id,
+          name: course.name,
+          holes: course.holes.map((hole: DBHole) => ({
+            par: hole.par,
+            blue: hole.blue_distance,
+            white: hole.white_distance,
+            red: hole.red_distance
+          }))
+        }));
+        console.log('Mapped courses data:', coursesData);
+        console.log('First course holes sample:', coursesData[0]?.holes?.slice(0, 3));
+        setCourses(coursesData);
 
         // Try to migrate localStorage data if users exist but no Supabase data
         if (usersData.length === 0) {
