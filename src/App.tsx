@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { userService, courseService, roundService, migrationService, type User, type DBCourse, type Round, type DBHole } from './services/database';
+import { userService, courseService, roundService, migrationService, type User, type DBCourse, type Round, type DBHole, type NewCourseHole } from './services/database';
 import { getAiAnalysis, type AiAnalysisRequest } from './services/aiService';
 
 type HoleData = {
@@ -113,6 +113,71 @@ function formatDate(date: Date) {
   });
 }
 
+function mapDbCourseToCourse(course: DBCourse): Course {
+  return {
+    id: course.id,
+    name: course.name,
+    holes: course.holes.map((hole: DBHole) => ({
+      par: hole.par,
+      blue: hole.blue_distance,
+      white: hole.white_distance,
+      red: hole.red_distance,
+    })),
+  };
+}
+
+function buildCourseTemplate(holeCount: 9 | 18) {
+  return Array.from({ length: holeCount }, (_, index) => `${index + 1},4,320,280,240`).join('\n');
+}
+
+function parseCourseImport(rawText: string): { holes: NewCourseHole[]; error?: string } {
+  const lines = rawText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) {
+    return { holes: [], error: 'Add hole data before saving the course.' };
+  }
+
+  if (lines.length !== 9 && lines.length !== 18) {
+    return { holes: [], error: 'Import exactly 9 or 18 holes.' };
+  }
+
+  const holes: NewCourseHole[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const parts = lines[index]
+      .split(/[\t,]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length !== 4 && parts.length !== 5) {
+      return {
+        holes: [],
+        error: `Line ${index + 1} must be "hole,par,blue,white,red" or "par,blue,white,red".`,
+      };
+    }
+
+    const values = parts.map((part) => Number(part));
+    if (values.some((value) => Number.isNaN(value) || value <= 0 || !Number.isInteger(value))) {
+      return { holes: [], error: `Line ${index + 1} must use positive whole numbers only.` };
+    }
+
+    const [holeNumber, par, blue, white, red] = parts.length === 5
+      ? values
+      : [index + 1, values[0], values[1], values[2], values[3]];
+
+    if (holeNumber !== index + 1) {
+      return { holes: [], error: `Hole numbers must run in order from 1 to ${lines.length}.` };
+    }
+
+    holes.push({ hole_number: holeNumber, par, blue, white, red });
+  }
+
+  return { holes };
+}
+
 // Fancy hole number display function
 const getFancyHoleNumber = (holeIndex: number) => {
   const holeNumber = holeIndex + 1;
@@ -188,6 +253,11 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [newUserName, setNewUserName] = useState('');
   const [userNameError, setUserNameError] = useState('');
+  const [showCourseManager, setShowCourseManager] = useState(false);
+  const [newCourseName, setNewCourseName] = useState('');
+  const [courseImportText, setCourseImportText] = useState(buildCourseTemplate(9));
+  const [courseImportError, setCourseImportError] = useState('');
+  const [savingCourse, setSavingCourse] = useState(false);
 
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedTee, setSelectedTee] = useState<'blue' | 'white' | 'red'>('white');
@@ -201,6 +271,18 @@ function App() {
     history: 'Save rounds to get AI trend feedback.',
   });
   const [aiLoading, setAiLoading] = useState(false);
+
+  const loadCourses = async () => {
+    const dbCourses: DBCourse[] = await courseService.getAllCourses();
+    console.log('Loaded DB courses:', dbCourses);
+    console.log('DB courses with holes:', dbCourses.map(c => ({ name: c.name, holesCount: c.holes.length })));
+
+    const coursesData: Course[] = dbCourses.map(mapDbCourseToCourse);
+    console.log('Mapped courses data:', coursesData);
+    console.log('First course holes sample:', coursesData[0]?.holes?.slice(0, 3));
+    setCourses(coursesData);
+    return coursesData;
+  };
 
   // Load initial data from Supabase
   useEffect(() => {
@@ -219,23 +301,7 @@ function App() {
         }
 
         // Load courses after migration attempt
-        const dbCourses: DBCourse[] = await courseService.getAllCourses();
-        console.log('Loaded DB courses:', dbCourses);
-        console.log('DB courses with holes:', dbCourses.map(c => ({ name: c.name, holesCount: c.holes.length })));
-
-        const coursesData: Course[] = dbCourses.map(course => ({
-          id: course.id,
-          name: course.name,
-          holes: course.holes.map((hole: DBHole) => ({
-            par: hole.par,
-            blue: hole.blue_distance,
-            white: hole.white_distance,
-            red: hole.red_distance
-          }))
-        }));
-        console.log('Mapped courses data:', coursesData);
-        console.log('First course holes sample:', coursesData[0]?.holes?.slice(0, 3));
-        setCourses(coursesData);
+        await loadCourses();
 
         // Try to migrate localStorage data if users exist but no Supabase data
         if (usersData.length === 0) {
@@ -283,6 +349,17 @@ function App() {
     setSavedHoleNumbers([]);
     setExpandedHoles([]);
   }, [holeCount]);
+
+  useEffect(() => {
+    if (selectedCourse && holeCount > selectedCourse.holes.length) {
+      setHoleCount(selectedCourse.holes.length);
+    }
+  }, [selectedCourse, holeCount]);
+
+  const availableHoleCounts = useMemo(() => {
+    if (!selectedCourse) return [9, 18];
+    return selectedCourse.holes.length >= 18 ? [9, 18] : [selectedCourse.holes.length];
+  }, [selectedCourse]);
 
   const draftStorageKey = useMemo(() => {
     if (!currentUser || !selectedCourse) return null;
@@ -532,6 +609,46 @@ function App() {
     }
   };
 
+  const saveCustomCourse = async () => {
+    const trimmedName = newCourseName.trim();
+    if (!trimmedName) {
+      setCourseImportError('Enter a golf course name.');
+      return;
+    }
+
+    if (courses.some((course) => course.name.toLowerCase() === trimmedName.toLowerCase())) {
+      setCourseImportError(`"${trimmedName}" already exists. Use a different course name.`);
+      return;
+    }
+
+    const parsed = parseCourseImport(courseImportText);
+    if (parsed.error) {
+      setCourseImportError(parsed.error);
+      return;
+    }
+
+    try {
+      setSavingCourse(true);
+      setCourseImportError('');
+
+      const createdCourse = await courseService.createCourse(trimmedName, parsed.holes);
+      const mappedCourse = mapDbCourseToCourse(createdCourse);
+      const updatedCourses = [...courses, mappedCourse].sort((a, b) => a.name.localeCompare(b.name));
+
+      setCourses(updatedCourses);
+      setSelectedCourse(mappedCourse);
+      setHoleCount(parsed.holes.length === 18 ? 18 : 9);
+      setShowCourseManager(false);
+      setNewCourseName('');
+      setCourseImportText(buildCourseTemplate(9));
+    } catch (error) {
+      console.error('Error creating course:', error);
+      setCourseImportError('Failed to save the new course. Please try again.');
+    } finally {
+      setSavingCourse(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="app-shell">
@@ -612,7 +729,7 @@ function App() {
 
         <div className="panel">
           <div className="buttons-row">
-            {[9, 18].map((count) => (
+            {availableHoleCounts.map((count) => (
               <button
                 key={count}
                 className={`toggle-button ${holeCount === count ? 'active' : ''}`}
@@ -628,21 +745,107 @@ function App() {
               <img src={shotIcons.golfcourse} alt="Course" className="label-icon" />
               Select Golf Course:
             </label>
-            <select
-              value={selectedCourse?.name || ''}
-              onChange={(e) => {
-                const course = courses.find(c => c.name === e.target.value);
-                console.log('Selected Golf course:', course);
-                console.log('Course holes:', course?.holes);
-                if (course) setSelectedCourse(course);
-              }}
-              style={{ padding: '8px', borderRadius: '8px', border: '1px solid #dbeafe', width: '100%' }}
-            >
-              <option value="" disabled>⛳ Choose your golf course...</option>
-              {courses.map((course) => (
-                <option key={course.id} value={course.name}>{course.name}</option>
-              ))}
-            </select>
+            <div className="course-picker-row">
+              <select
+                value={selectedCourse?.name || ''}
+                onChange={(e) => {
+                  const course = courses.find(c => c.name === e.target.value);
+                  console.log('Selected Golf course:', course);
+                  console.log('Course holes:', course?.holes);
+                  if (course) setSelectedCourse(course);
+                }}
+                style={{ padding: '8px', borderRadius: '8px', border: '1px solid #dbeafe', width: '100%' }}
+              >
+                <option value="" disabled>⛳ Choose your golf course...</option>
+                {courses.map((course) => (
+                  <option key={course.id} value={course.name}>{course.name}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="button secondary course-manage-btn"
+                onClick={() => {
+                  setShowCourseManager((current) => !current);
+                  setCourseImportError('');
+                }}
+              >
+                {showCourseManager ? 'Close' : 'Add Course'}
+              </button>
+            </div>
+            {showCourseManager ? (
+              <div className="course-manager-card">
+                <div className="course-manager-header">
+                  <h3>Create Custom Course</h3>
+                  <p>Paste one hole per line. Use either "hole,par,blue,white,red" or "par,blue,white,red".</p>
+                </div>
+
+                <input
+                  type="text"
+                  className="course-manager-input"
+                  placeholder="Course name"
+                  value={newCourseName}
+                  onChange={(e) => {
+                    setNewCourseName(e.target.value);
+                    setCourseImportError('');
+                  }}
+                />
+
+                <div className="course-template-row">
+                  <button
+                    type="button"
+                    className="toggle-button"
+                    onClick={() => setCourseImportText(buildCourseTemplate(9))}
+                  >
+                    Load 9-hole template
+                  </button>
+                  <button
+                    type="button"
+                    className="toggle-button"
+                    onClick={() => setCourseImportText(buildCourseTemplate(18))}
+                  >
+                    Load 18-hole template
+                  </button>
+                </div>
+
+                <textarea
+                  className="course-manager-textarea"
+                  value={courseImportText}
+                  onChange={(e) => {
+                    setCourseImportText(e.target.value);
+                    setCourseImportError('');
+                  }}
+                  placeholder="1,4,320,280,240&#10;2,3,165,145,120&#10;3,5,505,455,410"
+                  rows={10}
+                />
+
+                {courseImportError ? (
+                  <p className="course-manager-error">{courseImportError}</p>
+                ) : (
+                  <p className="course-manager-help">Example: 1,4,320,280,240 means Hole 1, Par 4, Blue 320yd, White 280yd, Red 240yd.</p>
+                )}
+
+                <div className="course-template-row">
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={saveCustomCourse}
+                    disabled={savingCourse}
+                  >
+                    {savingCourse ? 'Saving...' : 'Save Course'}
+                  </button>
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={() => {
+                      setShowCourseManager(false);
+                      setCourseImportError('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div style={{ marginTop: '18px' }}>

@@ -23,6 +23,14 @@ export interface DBHole {
   red_distance: number;
 }
 
+export interface NewCourseHole {
+  hole_number: number;
+  par: number;
+  blue: number;
+  white: number;
+  red: number;
+}
+
 export interface Course {
   id: string;
   name: string;
@@ -138,6 +146,44 @@ export const courseService = {
     );
 
     return coursesWithHoles;
+  },
+
+  async createCourse(name: string, holes: NewCourseHole[]): Promise<DBCourse> {
+    const trimmedName = name.trim();
+
+    const { data: courseData, error: courseError } = await supabase
+      .from('courses')
+      .insert([{ name: trimmedName }])
+      .select()
+      .single();
+
+    if (courseError) throw courseError;
+
+    try {
+      const holePayload = holes.map((hole) => ({
+        course_id: courseData.id,
+        hole_number: hole.hole_number,
+        par: hole.par,
+        blue_distance: hole.blue,
+        white_distance: hole.white,
+        red_distance: hole.red,
+      }));
+
+      const { data: holeData, error: holesError } = await supabase
+        .from('holes')
+        .insert(holePayload)
+        .select();
+
+      if (holesError) throw holesError;
+
+      return {
+        ...courseData,
+        holes: (holeData || []).sort((a, b) => a.hole_number - b.hole_number),
+      };
+    } catch (error) {
+      await supabase.from('courses').delete().eq('id', courseData.id);
+      throw error;
+    }
   }
 };
 
