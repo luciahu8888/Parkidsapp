@@ -193,6 +193,7 @@ function App() {
   const [holeCount, setHoleCount] = useState(defaultHoleCount);
   const [scores, setScores] = useState<HoleScore[]>(createEmptyScores(defaultHoleCount));
   const [savedHoleNumbers, setSavedHoleNumbers] = useState<number[]>([]);
+  const [expandedHoles, setExpandedHoles] = useState<number[]>([]);
   const [history, setHistory] = useState<Round[]>([]);
   const [aiAnalysis, setAiAnalysis] = useState<{ currentRound: string; history: string }>({
     currentRound: 'AI insights will appear here after you start scoring.',
@@ -279,6 +280,7 @@ function App() {
   useEffect(() => {
     setScores(createEmptyScores(holeCount));
     setSavedHoleNumbers([]);
+    setExpandedHoles([]);
   }, [holeCount]);
 
   const draftStorageKey = useMemo(() => {
@@ -352,6 +354,14 @@ function App() {
         }
         return score;
       })
+    );
+  };
+
+  const toggleHoleExpanded = (holeIndex: number) => {
+    setExpandedHoles((current) =>
+      current.includes(holeIndex)
+        ? current.filter((idx) => idx !== holeIndex)
+        : [...current, holeIndex]
     );
   };
 
@@ -647,6 +657,7 @@ function App() {
             const par = holeData ? holeData.par : 3;
             const performance = getPerformance(score.total, par);
             const fancyHole = getFancyHoleNumber(index);
+            const isExpanded = expandedHoles.includes(index);
             return (
               <div key={index} className="hole-card">
                 {/* Hole Header */}
@@ -658,111 +669,129 @@ function App() {
                   <div className="hole-info">
                     <div className="par-info">Par {par}</div>
                     <div className="distance-info">{distance}yd</div>
-                  </div>
-                </div>
-
-                {/* Prominent Total Score */}
-                <div className="total-score-display">
-                  <div className="score-circle">
-                    <span className="score-number">{score.total}</span>
-                    <span className="score-label">Total</span>
-                  </div>
-                  <div className="score-vs-par">
-                    {score.total - par > 0 && <span className="over-par">+{score.total - par}</span>}
-                    {score.total - par === 0 && <span className="even-par">Even</span>}
-                    {score.total - par < 0 && <span className="under-par">{score.total - par}</span>}
-                  </div>
-                </div>
-
-                {/* Performance Badge */}
-                <div className="performance-section">
-                  <div className="performance-badge" style={{ 
-                    backgroundColor: performance.color, 
-                    color: 'white'
-                  }}>
-                    <span className="performance-emoji">{performance.emoji}</span>
-                    <span className="performance-text">{performance.label}</span>
-                  </div>
-                </div>
-
-                {/* Shot Breakdown */}
-                <div className="shots-section">
-                  <h4 className="shots-title">Shot Breakdown</h4>
-                  <div className="shot-breakdown">
-                    <div className="shot-row">
-                      <div className="shot-label">
-                        <img src={shotIcons.driver} alt="Driver" className="shot-icon" />
-                        <span>Driver</span>
-                      </div>
-                      <div className="shot-controls">
-                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'driver', -1)}>-</button>
-                        <span className="shot-count">{score.breakdown.driver}</span>
-                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'driver', 1)}>+</button>
-                      </div>
-                    </div>
-                    
-                    <div className="shot-row">
-                      <div className="shot-label">
-                        <img src={shotIcons.fairway} alt="Fairway" className="shot-icon" />
-                        <span>Fairway</span>
-                      </div>
-                      <div className="shot-controls">
-                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'fairway', -1)}>-</button>
-                        <span className="shot-count">{score.breakdown.fairway}</span>
-                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'fairway', 1)}>+</button>
-                      </div>
-                    </div>
-                    
-                    <div className="shot-row">
-                      <div className="shot-label">
-                        <img src={shotIcons.iron} alt="Iron" className="shot-icon" />
-                        <span>Iron</span>
-                      </div>
-                      <div className="shot-controls">
-                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'iron', -1)}>-</button>
-                        <span className="shot-count">{score.breakdown.iron}</span>
-                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'iron', 1)}>+</button>
-                      </div>
-                    </div>
-                    
-                    <div className="shot-row">
-                      <div className="shot-label">
-                        <img src={shotIcons.pitching} alt="Pitching" className="shot-icon" />
-                        <span>Pitching</span>
-                      </div>
-                      <div className="shot-controls">
-                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'pitching', -1)}>-</button>
-                        <span className="shot-count">{score.breakdown.pitching}</span>
-                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'pitching', 1)}>+</button>
-                      </div>
-                    </div>
-                    
-                    <div className="shot-row">
-                      <div className="shot-label">
-                        <img src={shotIcons.putting} alt="Putting" className="shot-icon" />
-                        <span>Putting</span>
-                      </div>
-                      <div className="shot-controls">
-                        <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'putting', -1)}>-</button>
-                        <span className="shot-count">{score.breakdown.putting}</span>
-                        <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'putting', 1)}>+</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="hole-save-row">
                     <button
-                      className="button hole-save-btn"
-                      onClick={() => saveDraft(index + 1)}
                       type="button"
+                      className="toggle-button hole-toggle-btn"
+                      onClick={() => toggleHoleExpanded(index)}
                     >
-                      💾 Save Hole {index + 1}
+                      {isExpanded ? 'Hide Details' : 'Show Details'}
                     </button>
-                    {savedHoleNumbers.includes(index + 1) ? (
-                      <span className="hole-save-note">Saved</span>
-                    ) : null}
                   </div>
                 </div>
+
+                {isExpanded ? (
+                  <>
+                    {/* Prominent Total Score */}
+                    <div className="total-score-display">
+                      <div className="score-circle">
+                        <span className="score-number">{score.total}</span>
+                        <span className="score-label">Total</span>
+                      </div>
+                      <div className="score-vs-par">
+                        {score.total - par > 0 && <span className="over-par">+{score.total - par}</span>}
+                        {score.total - par === 0 && <span className="even-par">Even</span>}
+                        {score.total - par < 0 && <span className="under-par">{score.total - par}</span>}
+                      </div>
+                    </div>
+
+                    {/* Performance Badge */}
+                    <div className="performance-section">
+                      <div className="performance-badge" style={{ 
+                        backgroundColor: performance.color, 
+                        color: 'white'
+                      }}>
+                        <span className="performance-emoji">{performance.emoji}</span>
+                        <span className="performance-text">{performance.label}</span>
+                      </div>
+                    </div>
+
+                    {/* Shot Breakdown */}
+                    <div className="shots-section">
+                      <h4 className="shots-title">Shot Breakdown</h4>
+                      <div className="shot-breakdown">
+                        <div className="shot-row">
+                          <div className="shot-label">
+                            <img src={shotIcons.driver} alt="Driver" className="shot-icon" />
+                            <span>Driver</span>
+                          </div>
+                          <div className="shot-controls">
+                            <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'driver', -1)}>-</button>
+                            <span className="shot-count">{score.breakdown.driver}</span>
+                            <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'driver', 1)}>+</button>
+                          </div>
+                        </div>
+                        
+                        <div className="shot-row">
+                          <div className="shot-label">
+                            <img src={shotIcons.fairway} alt="Fairway" className="shot-icon" />
+                            <span>Fairway</span>
+                          </div>
+                          <div className="shot-controls">
+                            <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'fairway', -1)}>-</button>
+                            <span className="shot-count">{score.breakdown.fairway}</span>
+                            <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'fairway', 1)}>+</button>
+                          </div>
+                        </div>
+                        
+                        <div className="shot-row">
+                          <div className="shot-label">
+                            <img src={shotIcons.iron} alt="Iron" className="shot-icon" />
+                            <span>Iron</span>
+                          </div>
+                          <div className="shot-controls">
+                            <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'iron', -1)}>-</button>
+                            <span className="shot-count">{score.breakdown.iron}</span>
+                            <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'iron', 1)}>+</button>
+                          </div>
+                        </div>
+                        
+                        <div className="shot-row">
+                          <div className="shot-label">
+                            <img src={shotIcons.pitching} alt="Pitching" className="shot-icon" />
+                            <span>Pitching</span>
+                          </div>
+                          <div className="shot-controls">
+                            <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'pitching', -1)}>-</button>
+                            <span className="shot-count">{score.breakdown.pitching}</span>
+                            <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'pitching', 1)}>+</button>
+                          </div>
+                        </div>
+                        
+                        <div className="shot-row">
+                          <div className="shot-label">
+                            <img src={shotIcons.putting} alt="Putting" className="shot-icon" />
+                            <span>Putting</span>
+                          </div>
+                          <div className="shot-controls">
+                            <button className="shot-btn minus-btn" onClick={() => updateShot(index, 'putting', -1)}>-</button>
+                            <span className="shot-count">{score.breakdown.putting}</span>
+                            <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'putting', 1)}>+</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="hole-save-row">
+                        <button
+                          className="button hole-save-btn"
+                          onClick={() => saveDraft(index + 1)}
+                          type="button"
+                        >
+                          💾 Save Hole {index + 1}
+                        </button>
+                        {savedHoleNumbers.includes(index + 1) ? (
+                          <span className="hole-save-note">Saved</span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="hole-collapsed-summary">
+                    <span>Total: {score.total}</span>
+                    <span>
+                      {score.total - par > 0 ? `+${score.total - par}` : score.total - par}
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}

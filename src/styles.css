@@ -278,6 +278,14 @@ body {
   text-align: right;
 }
 
+.hole-toggle-btn {
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
 .par-info {
   font-size: 1rem;
   font-weight: 700;
@@ -409,6 +417,20 @@ body {
 .shots-section {
   flex: 1;
   margin-top: 6px;
+}
+
+.hole-collapsed-summary {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
 }
 
 .shots-title {
