@@ -187,6 +187,7 @@ function App() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [newUserName, setNewUserName] = useState('');
+  const [userNameError, setUserNameError] = useState('');
 
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedTee, setSelectedTee] = useState<'blue' | 'white' | 'red'>('white');
@@ -473,16 +474,21 @@ function App() {
   };
 
   const addUser = async () => {
-    if (newUserName.trim() && !users.some(user => user.name === newUserName.trim())) {
-      try {
-        const newUser = await userService.createUser(newUserName.trim());
-        addOwnedUserId(newUser.id);
-        setUsers((prev) => [...prev, newUser]);
-        setNewUserName('');
-      } catch (error) {
-        console.error('Error creating user:', error);
-        alert('Failed to create user. Please try again.');
-      }
+    const trimmed = newUserName.trim();
+    if (!trimmed) return;
+    if (users.some(user => user.name.toLowerCase() === trimmed.toLowerCase())) {
+      setUserNameError(`"${trimmed}" already exists. Please use a different name.`);
+      return;
+    }
+    try {
+      const newUser = await userService.createUser(trimmed);
+      addOwnedUserId(newUser.id);
+      setUsers((prev) => [...prev, newUser]);
+      setNewUserName('');
+      setUserNameError('');
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Failed to create user. Please try again.');
     }
   };
 
@@ -578,13 +584,16 @@ function App() {
               type="text"
               placeholder="New golfer name"
               value={newUserName}
-              onChange={(e) => setNewUserName(e.target.value)}
-              style={{ padding: '10px', marginRight: '10px', borderRadius: '8px', border: '1px solid #dbeafe' }}
+              onChange={(e) => { setNewUserName(e.target.value); setUserNameError(''); }}
+              style={{ padding: '10px', marginRight: '10px', borderRadius: '8px', border: userNameError ? '1px solid #ef4444' : '1px solid #dbeafe' }}
             />
             <button className="button secondary" onClick={addUser}>
               ➕ Add Golfer
             </button>
           </div>
+          {userNameError && (
+            <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '6px' }}>{userNameError}</p>
+          )}
         </section>
       </div>
     );
