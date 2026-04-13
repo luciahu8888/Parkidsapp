@@ -428,6 +428,31 @@ body {
   width: 100%;
 }
 
+.hole-save-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.hole-save-btn {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+}
+
+.hole-save-note {
+  font-size: 0.75rem;
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 .shot-row {
   display: flex;
   justify-content: space-between;

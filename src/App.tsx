@@ -28,6 +28,12 @@ type HoleScore = {
   breakdown: ShotBreakdown;
 };
 
+type RoundDraft = {
+  scores: HoleScore[];
+  savedHoleNumbers: number[];
+  updatedAt: string;
+};
+
 const defaultHoleCount = 9;
 
 // Icon mappings
@@ -186,6 +192,7 @@ function App() {
   const [selectedTee, setSelectedTee] = useState<'blue' | 'white' | 'red'>('white');
   const [holeCount, setHoleCount] = useState(defaultHoleCount);
   const [scores, setScores] = useState<HoleScore[]>(createEmptyScores(defaultHoleCount));
+  const [savedHoleNumbers, setSavedHoleNumbers] = useState<number[]>([]);
   const [history, setHistory] = useState<Round[]>([]);
   const [aiAnalysis, setAiAnalysis] = useState<{ currentRound: string; history: string }>({
     currentRound: 'AI insights will appear here after you start scoring.',
@@ -271,7 +278,53 @@ function App() {
 
   useEffect(() => {
     setScores(createEmptyScores(holeCount));
+    setSavedHoleNumbers([]);
   }, [holeCount]);
+
+  const draftStorageKey = useMemo(() => {
+    if (!currentUser || !selectedCourse) return null;
+    return `parkids-round-draft-${currentUser.id}-${selectedCourse.id}-${selectedTee}-${holeCount}`;
+  }, [currentUser, selectedCourse, selectedTee, holeCount]);
+
+  const saveDraft = (holeNumberToMark?: number) => {
+    if (!draftStorageKey) return;
+
+    const mergedSavedHoles = holeNumberToMark
+      ? Array.from(new Set([...savedHoleNumbers, holeNumberToMark]))
+      : savedHoleNumbers;
+
+    const draft: RoundDraft = {
+      scores,
+      savedHoleNumbers: mergedSavedHoles,
+      updatedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+    setSavedHoleNumbers(mergedSavedHoles);
+  };
+
+  useEffect(() => {
+    if (!draftStorageKey) return;
+
+    try {
+      const rawDraft = localStorage.getItem(draftStorageKey);
+      if (!rawDraft) {
+        setSavedHoleNumbers([]);
+        return;
+      }
+
+      const parsedDraft = JSON.parse(rawDraft) as RoundDraft;
+      if (Array.isArray(parsedDraft.scores) && parsedDraft.scores.length === holeCount) {
+        setScores(parsedDraft.scores);
+      }
+
+      if (Array.isArray(parsedDraft.savedHoleNumbers)) {
+        setSavedHoleNumbers(parsedDraft.savedHoleNumbers);
+      }
+    } catch (error) {
+      console.error('Failed to load round draft:', error);
+    }
+  }, [draftStorageKey, holeCount]);
 
   const totalScore = useMemo(() => scores.reduce((sum, score) => sum + score.total, 0), [scores]);
   const bestScore = useMemo(() => {
@@ -391,6 +444,10 @@ function App() {
 
       // Reset scores for next round
       setScores(createEmptyScores(holeCount));
+      setSavedHoleNumbers([]);
+      if (draftStorageKey) {
+        localStorage.removeItem(draftStorageKey);
+      }
     } catch (error) {
       console.error('Error saving round:', error);
       alert('Failed to save round. Please try again.');
@@ -399,6 +456,10 @@ function App() {
 
   const resetRound = () => {
     setScores(createEmptyScores(holeCount));
+    setSavedHoleNumbers([]);
+    if (draftStorageKey) {
+      localStorage.removeItem(draftStorageKey);
+    }
   };
 
   const addUser = async () => {
@@ -687,6 +748,19 @@ function App() {
                         <button className="shot-btn plus-btn" onClick={() => updateShot(index, 'putting', 1)}>+</button>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="hole-save-row">
+                    <button
+                      className="button hole-save-btn"
+                      onClick={() => saveDraft(index + 1)}
+                      type="button"
+                    >
+                      💾 Save Hole {index + 1}
+                    </button>
+                    {savedHoleNumbers.includes(index + 1) ? (
+                      <span className="hole-save-note">Saved</span>
+                    ) : null}
                   </div>
                 </div>
               </div>
