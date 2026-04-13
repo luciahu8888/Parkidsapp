@@ -242,6 +242,39 @@ body {
   box-shadow: 0 10px 22px rgba(34, 139, 34, 0.18);
 }
 
+.hole-card--collapsed {
+  min-height: 0;
+  padding: 12px;
+}
+
+.hole-card--collapsed .hole-header {
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+}
+
+.hole-card--collapsed .hole-number {
+  font-size: 1.05rem;
+}
+
+.hole-card--collapsed .hole-emoji {
+  font-size: 1.2rem;
+}
+
+.hole-card--collapsed .par-info {
+  font-size: 0.9rem;
+}
+
+.hole-card--collapsed .distance-info {
+  font-size: 0.7rem;
+  padding: 1px 5px;
+}
+
+.hole-card--collapsed .hole-toggle-btn {
+  margin-top: 4px;
+  padding: 3px 7px;
+  font-size: 0.66rem;
+}
+
 /* Hole Header */
 .hole-header {
   display: flex;
@@ -420,15 +453,15 @@ body {
 }
 
 .hole-collapsed-summary {
-  margin-top: 8px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: linear-gradient(135deg, #f8fafc, #eef2ff);
   border: 1px solid #dbeafe;
   border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 0.8rem;
+  padding: 6px 8px;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #334155;
 }

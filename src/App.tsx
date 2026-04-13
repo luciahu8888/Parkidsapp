@@ -659,7 +659,7 @@ function App() {
             const fancyHole = getFancyHoleNumber(index);
             const isExpanded = expandedHoles.includes(index);
             return (
-              <div key={index} className="hole-card">
+              <div key={index} className={`hole-card ${isExpanded ? '' : 'hole-card--collapsed'}`}>
                 {/* Hole Header */}
                 <div className="hole-header">
                   <div className="hole-number-badge">
