@@ -740,6 +740,29 @@ body {
   border: 2px solid #228B22;
 }
 
+.history-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.delete-round-btn {
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff6b6b, #e53935);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.delete-round-btn:hover {
+  filter: brightness(0.95);
+}
+
 footer {
   margin-top: 10px;
   color: #64748b;

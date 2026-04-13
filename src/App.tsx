@@ -510,6 +510,22 @@ function App() {
     }
   };
 
+  const deleteSavedRound = async (roundId: string) => {
+    if (!currentUser) return;
+
+    const confirmed = confirm('Delete this saved round? This action cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      await roundService.deleteRound(roundId);
+      const userRounds = await roundService.getUserRounds(currentUser.id);
+      setHistory(userRounds);
+    } catch (error) {
+      console.error('Error deleting round:', error);
+      alert('Failed to delete round. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="app-shell">
@@ -863,7 +879,17 @@ function App() {
 
               return (
                 <div key={round.id} className="history-item">
-                  <strong>📅 {round.date_played} at {courses.find(c => c.id === round.course_id)?.name || 'Unknown Course'} ({round.tee_color} tee)</strong>
+                  <div className="history-item-header">
+                    <strong>📅 {round.date_played} at {courses.find(c => c.id === round.course_id)?.name || 'Unknown Course'} ({round.tee_color} tee)</strong>
+                    <button
+                      className="delete-round-btn"
+                      type="button"
+                      onClick={() => deleteSavedRound(round.id)}
+                      title="Delete this round"
+                    >
+                      Delete
+                    </button>
+                  </div>
                   <div>{round.hole_count} holes • Score {round.total_score} (Par {round.total_par}) • {round.total_score - round.total_par > 0 ? '+' : ''}{round.total_score - round.total_par} 🏌️</div>
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '6px', alignItems: 'center' }}>
                     {[

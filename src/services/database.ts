@@ -193,6 +193,15 @@ export const roundService = {
       ...roundData,
       hole_scores: scoresData || []
     };
+  },
+
+  async deleteRound(roundId: string): Promise<void> {
+    const { error } = await supabase
+      .from('rounds')
+      .delete()
+      .eq('id', roundId);
+
+    if (error) throw error;
   }
 };
 
