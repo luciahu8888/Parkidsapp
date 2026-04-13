@@ -686,7 +686,7 @@ function App() {
             return (
               <div key={index} className={`hole-card ${isExpanded ? '' : 'hole-card--collapsed'}`}>
                 {/* Hole Header */}
-                <div className="hole-header">
+                <div className="hole-header hole-header--clickable" onClick={() => toggleHoleExpanded(index)}>
                   <div className="hole-number-badge">
                     <span className="hole-emoji">{fancyHole.emoji}</span>
                     <span className="hole-number">{fancyHole.number}</span>
@@ -694,14 +694,16 @@ function App() {
                   <div className="hole-info">
                     <div className="par-info">Par {par}</div>
                     <div className="distance-info">{distance}yd</div>
-                    <button
-                      type="button"
-                      className="toggle-button hole-toggle-btn"
-                      onClick={() => toggleHoleExpanded(index)}
-                    >
-                      {isExpanded ? 'Hide Details' : 'Show Details'}
-                    </button>
                   </div>
+                  {!isExpanded && (
+                    <div className="hole-collapsed-inline">
+                      <span>Total: {score.total}</span>
+                      <span className={score.total - par > 0 ? 'over-par' : score.total - par < 0 ? 'under-par' : 'even-par'}>
+                        {score.total - par > 0 ? `+${score.total - par}` : score.total - par === 0 ? 'E' : score.total - par}
+                      </span>
+                    </div>
+                  )}
+                  <span className="hole-chevron">{isExpanded ? '▲' : '▼'}</span>
                 </div>
 
                 {isExpanded ? (
@@ -809,14 +811,7 @@ function App() {
                       </div>
                     </div>
                   </>
-                ) : (
-                  <div className="hole-collapsed-summary">
-                    <span>Total: {score.total}</span>
-                    <span>
-                      {score.total - par > 0 ? `+${score.total - par}` : score.total - par}
-                    </span>
-                  </div>
-                )}
+                ) : null}
               </div>
             );
           })}

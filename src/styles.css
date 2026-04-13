@@ -248,8 +248,9 @@ body {
 }
 
 .hole-card--collapsed .hole-header {
-  margin-bottom: 6px;
-  padding-bottom: 6px;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .hole-card--collapsed .hole-number {
@@ -269,12 +270,6 @@ body {
   padding: 1px 5px;
 }
 
-.hole-card--collapsed .hole-toggle-btn {
-  margin-top: 4px;
-  padding: 3px 7px;
-  font-size: 0.66rem;
-}
-
 /* Hole Header */
 .hole-header {
   display: flex;
@@ -283,6 +278,39 @@ body {
   margin-bottom: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid #e9ecef;
+}
+
+.hole-header--clickable {
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 4px 4px;
+  margin: -4px -4px 8px;
+  transition: background 0.15s ease;
+}
+
+.hole-header--clickable:hover {
+  background: rgba(34, 139, 34, 0.07);
+}
+
+.hole-chevron {
+  font-size: 0.65rem;
+  color: #228B22;
+  opacity: 0.7;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.hole-collapsed-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  gap: 1px;
+  flex: 1;
+  text-align: right;
+  margin: 0 6px;
 }
 
 .hole-number-badge {
@@ -309,14 +337,6 @@ body {
 
 .hole-info {
   text-align: right;
-}
-
-.hole-toggle-btn {
-  margin-top: 6px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
 }
 
 .par-info {
