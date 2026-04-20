@@ -62,49 +62,6 @@ const createEmptyHoleScore = (): HoleScore => ({
 const createEmptyScores = (count: number): HoleScore[] => 
   Array.from({ length: count }, () => createEmptyHoleScore());
 
-const ownedUsersStorageKey = 'parkids-owned-user-ids';
-const legacyUsersStorageKey = 'parkids-users';
-
-function getOwnedUserIds(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(ownedUsersStorageKey) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function setOwnedUserIds(ids: string[]) {
-  localStorage.setItem(ownedUsersStorageKey, JSON.stringify(Array.from(new Set(ids))));
-}
-
-function addOwnedUserId(userId: string) {
-  setOwnedUserIds([...getOwnedUserIds(), userId]);
-}
-
-function removeOwnedUserId(userId: string) {
-  setOwnedUserIds(getOwnedUserIds().filter((id) => id !== userId));
-}
-
-function filterUsersByOwnership(allUsers: User[]): User[] {
-  const ownedIds = new Set(getOwnedUserIds());
-
-  // One-time bootstrap from legacy local user names if ownership list is empty.
-  if (ownedIds.size === 0) {
-    try {
-      const legacyNames = new Set<string>(JSON.parse(localStorage.getItem(legacyUsersStorageKey) || '[]'));
-      const matchedIds = allUsers.filter((user) => legacyNames.has(user.name)).map((user) => user.id);
-      if (matchedIds.length > 0) {
-        setOwnedUserIds(matchedIds);
-        matchedIds.forEach((id) => ownedIds.add(id));
-      }
-    } catch {
-      // Ignore invalid legacy format and keep ownership empty.
-    }
-  }
-
-  return allUsers.filter((user) => ownedIds.has(user.id));
-}
-
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -247,6 +204,7 @@ function getPerformance(total: number, par: number): { label: string; emoji: str
 }
 
 function App() {
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -292,7 +250,8 @@ function App() {
 
         // Load users
         const usersData = await userService.getAllUsers();
-        setUsers(filterUsersByOwnership(usersData));
+        setAllUsers(usersData);
+        setUsers(usersData);
 
         // Always run migration so newly added courses are auto-filled for existing databases too.
         const migrationOk = await migrationService.checkAndPopulateDatabase();
@@ -309,14 +268,17 @@ function App() {
           if (migrated) {
             // Reload data after migration
             const newUsersData = await userService.getAllUsers();
-            setUsers(filterUsersByOwnership(newUsersData));
+            setAllUsers(newUsersData);
+            setUsers(newUsersData);
           }
         }
       } catch (error) {
         console.error('Error loading initial data:', error);
         // Fallback to localStorage if Supabase fails
         const localUsers = JSON.parse(localStorage.getItem('parkids-users') || '["Kid 1", "Kid 2"]');
-        setUsers(localUsers.map((name: string) => ({ id: name, name, created_at: '', updated_at: '' })));
+        const fallbackUsers = localUsers.map((name: string) => ({ id: name, name, created_at: '', updated_at: '' }));
+        setAllUsers(fallbackUsers);
+        setUsers(fallbackUsers);
       } finally {
         setLoading(false);
       }
@@ -565,14 +527,14 @@ function App() {
   const addUser = async () => {
     const trimmed = newUserName.trim();
     if (!trimmed) return;
-    if (users.some(user => user.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (allUsers.some(user => user.name.toLowerCase() === trimmed.toLowerCase())) {
       setUserNameError(`"${trimmed}" already exists. Please use a different name.`);
       return;
     }
     try {
       const newUser = await userService.createUser(trimmed);
-      addOwnedUserId(newUser.id);
       setUsers((prev) => [...prev, newUser]);
+      setAllUsers((prev) => [...prev, newUser]);
       setNewUserName('');
       setUserNameError('');
     } catch (error) {
@@ -590,8 +552,8 @@ function App() {
     if (confirm(`Are you sure you want to delete "${userToDelete.name}"? This will also delete their game history.`)) {
       try {
         await userService.deleteUser(userToDelete.id);
-        removeOwnedUserId(userToDelete.id);
         setUsers((prev) => prev.filter(user => user.id !== userToDelete.id));
+        setAllUsers((prev) => prev.filter(user => user.id !== userToDelete.id));
 
         // If deleting current user, switch to another user
         if (currentUser?.id === userToDelete.id) {
