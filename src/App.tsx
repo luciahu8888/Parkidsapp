@@ -62,6 +62,39 @@ const createEmptyHoleScore = (): HoleScore => ({
 const createEmptyScores = (count: number): HoleScore[] => 
   Array.from({ length: count }, () => createEmptyHoleScore());
 
+const lastRoundPreferencesStorageKey = 'parkids-last-round-preferences';
+
+type LastRoundPreferences = {
+  courseId: string | null;
+  courseName: string | null;
+  tee: 'blue' | 'white' | 'red';
+  holeCount: number;
+};
+
+function getStoredRoundPreferences(): LastRoundPreferences | null {
+  try {
+    const raw = localStorage.getItem(lastRoundPreferencesStorageKey);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<LastRoundPreferences>;
+    const tee = parsed.tee;
+    const holeCount = parsed.holeCount;
+
+    if ((tee !== 'blue' && tee !== 'white' && tee !== 'red') || (holeCount !== 9 && holeCount !== 18)) {
+      return null;
+    }
+
+    return {
+      courseId: typeof parsed.courseId === 'string' ? parsed.courseId : null,
+      courseName: typeof parsed.courseName === 'string' ? parsed.courseName : null,
+      tee,
+      holeCount,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -204,6 +237,8 @@ function getPerformance(total: number, par: number): { label: string; emoji: str
 }
 
 function App() {
+  const initialRoundPreferences = getStoredRoundPreferences();
+
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -218,8 +253,8 @@ function App() {
   const [savingCourse, setSavingCourse] = useState(false);
 
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [selectedTee, setSelectedTee] = useState<'blue' | 'white' | 'red'>('white');
-  const [holeCount, setHoleCount] = useState(defaultHoleCount);
+  const [selectedTee, setSelectedTee] = useState<'blue' | 'white' | 'red'>(initialRoundPreferences?.tee || 'white');
+  const [holeCount, setHoleCount] = useState(initialRoundPreferences?.holeCount || defaultHoleCount);
   const [scores, setScores] = useState<HoleScore[]>(createEmptyScores(defaultHoleCount));
   const [savedHoleNumbers, setSavedHoleNumbers] = useState<number[]>([]);
   const [expandedHoles, setExpandedHoles] = useState<number[]>([]);
@@ -317,6 +352,33 @@ function App() {
       setHoleCount(selectedCourse.holes.length);
     }
   }, [selectedCourse, holeCount]);
+
+  useEffect(() => {
+    if (!courses.length || selectedCourse) return;
+
+    const saved = getStoredRoundPreferences();
+    if (!saved) return;
+
+    const restoredCourse = courses.find((course) =>
+      (saved.courseId && course.id === saved.courseId) ||
+      (saved.courseName && course.name === saved.courseName)
+    );
+
+    if (restoredCourse) {
+      setSelectedCourse(restoredCourse);
+    }
+  }, [courses, selectedCourse]);
+
+  useEffect(() => {
+    const preferences: LastRoundPreferences = {
+      courseId: selectedCourse?.id || null,
+      courseName: selectedCourse?.name || null,
+      tee: selectedTee,
+      holeCount,
+    };
+
+    localStorage.setItem(lastRoundPreferencesStorageKey, JSON.stringify(preferences));
+  }, [selectedCourse, selectedTee, holeCount]);
 
   const availableHoleCounts = useMemo(() => {
     if (!selectedCourse) return [9, 18];
