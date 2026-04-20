@@ -389,7 +389,9 @@ function App() {
     try {
       const rawDraft = localStorage.getItem(draftStorageKey);
       if (!rawDraft) {
+        setScores(createEmptyScores(holeCount));
         setSavedHoleNumbers([]);
+        setExpandedHoles([]);
         return;
       }
 
@@ -403,8 +405,18 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to load round draft:', error);
+      setScores(createEmptyScores(holeCount));
+      setSavedHoleNumbers([]);
+      setExpandedHoles([]);
     }
   }, [draftStorageKey, holeCount]);
+
+  const switchGolfer = (user: User | null) => {
+    setCurrentUser(user);
+    setScores(createEmptyScores(holeCount));
+    setSavedHoleNumbers([]);
+    setExpandedHoles([]);
+  };
 
   const totalScore = useMemo(() => scores.reduce((sum, score) => sum + score.total, 0), [scores]);
   const bestScore = useMemo(() => {
@@ -680,7 +692,7 @@ function App() {
               <div key={user.id} className="player-button-container">
                 <button
                   className="button player-button"
-                  onClick={() => setCurrentUser(user)}
+                  onClick={() => switchGolfer(user)}
                 >
                   <img src={shotIcons.player} alt="Player" className="button-icon" />
                   {user.name}
@@ -723,7 +735,7 @@ function App() {
           <span style={{ fontSize: '1.75rem' }}>⛳</span>
           <div>
             <h1>Parkids</h1>
-            <p className="subtext">Playing as {currentUser?.name}. <button className="button secondary" style={{ fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => setCurrentUser(null)}>🔄 Switch Golfer</button></p>
+            <p className="subtext">Playing as {currentUser?.name}. <button className="button secondary" style={{ fontSize: '0.8rem', padding: '4px 8px' }} onClick={() => switchGolfer(null)}>🔄 Switch Golfer</button></p>
           </div>
         </div>
 
